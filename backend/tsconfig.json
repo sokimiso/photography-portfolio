@@ -4,7 +4,7 @@
     "moduleResolution": "nodenext",
     "resolvePackageJsonExports": true,
     "esModuleInterop": true,
-    "isolatedModules": true,
+    "isolatedModules": false,
     "declaration": true,
     "removeComments": true,
     "emitDecoratorMetadata": true,
@@ -13,13 +13,29 @@
     "target": "ES2023",
     "sourceMap": true,
     "outDir": "./dist",
-    "baseUrl": "./",
+    "baseUrl": "./src",
     "incremental": true,
     "skipLibCheck": true,
     "strictNullChecks": true,
     "forceConsistentCasingInFileNames": true,
     "noImplicitAny": false,
     "strictBindCallApply": false,
-    "noFallthroughCasesInSwitch": false
-  }
+    "noFallthroughCasesInSwitch": false,
+    "typeRoots": ["./src/types", "./node_modules/@types"],
+
+    "paths": {
+      "@/*": ["*"],
+      "@controllers/*": ["controllers/*"],
+      "@services/*": ["services/*"],
+      "@routes/*": ["routes/*"],
+      "@models/*": ["models/*"],
+      "@middlewares/*": ["middlewares/*"],
+      "@validators/*": ["validators/*"],
+      "@utils/*": ["utils/*"],
+      "@config/*": ["config/*"],
+      "@types/*": ["types/*"]
+    }
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
 }

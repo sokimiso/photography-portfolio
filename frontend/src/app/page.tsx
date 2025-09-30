@@ -1,14 +1,15 @@
-"use client";
-import { motion } from "framer-motion";
+import HeroSection from "@/components/hero/HeroSection";
+import AboutMeSection from "@/components/about/AboutMeSection";
+import GalleryPreview from "@/components/gallery/GalleryPreview";
+import Footer from "@/components/layout/Footer";
 
-export default function Home() {
+export default function HomePage() {
   return (
-    <motion.h1
-      className="text-3xl font-bold text-red-500"
-      animate={{ scale: 1.2 }}
-      transition={{ duration: 0.5 }}
-    >
-      Tailwind + Framer Motion works!
-    </motion.h1>
+    <main className="bg-background-light dark:bg-background-dark text-foreground">
+      <HeroSection />
+      <AboutMeSection />
+      <GalleryPreview />
+      <Footer />
+    </main>
   );
 }
