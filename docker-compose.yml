@@ -1,0 +1,49 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16
+    container_name: portfolio_db
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: pwd
+      POSTGRES_DB: portfolio
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    networks:
+      - portfolio-net
+    restart: unless-stopped
+
+  backend:
+    build: ./backend
+    container_name: portfolio_backend
+    environment:
+      DATABASE_URL: postgres://user:pwd@db:5432/db
+      PORT: 4000
+    depends_on:
+      - db
+    networks:
+      - portfolio-net
+    ports:
+      - "4000:4000"
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    container_name: portfolio_frontend
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:3000/api
+    depends_on:
+      - backend
+    networks:
+      - portfolio-net
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+
+volumes:
+  db_data:
+
+networks:
+  portfolio-net:
+    driver: bridge

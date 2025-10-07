@@ -1,0 +1,50 @@
+{
+  "compilerOptions": {
+    "target": "ES2017",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "baseUrl": ".",             // Needed for clean paths
+    "paths": {
+      "@/*": ["./src/*"],
+
+      // Commonly used aliases
+      "@components/*": ["./src/components/*"],
+      "@layout/*": ["./src/components/layout/*"],
+      "@ui/*": ["./src/components/ui/*"],
+      "@gallery/*": ["./src/components/gallery/*"],
+      "@prisma/client": ["./node_modules/.prisma/client"],
+      "@lib/*": ["./src/lib/*"],
+      "@hooks/*": ["./src/hooks/*"],
+      "@context/*": ["./src/context/*"],
+      "@animations/*": ["./src/animations/*"],
+      "@content/*": ["./src/content/*"],
+      "@styles/*": ["./src/styles/*"],
+      "@types/*": ["./src/types/*"],
+      "@hero/*": ["./src/components/hero/*"],
+      "@about/*": ["./src/components/about/*"],
+    }
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    "**/*.css",
+    ".next/types/**/*.ts",
+  ],
+  "exclude": ["node_modules"]
+}

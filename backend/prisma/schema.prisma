@@ -1,0 +1,279 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+//
+// ENUMS
+//
+enum UserRole {
+  ADMIN
+  CUSTOMER
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+}
+
+enum TokenType {
+  EMAIL_CONFIRMATION
+  PASSWORD_RESET
+}
+
+enum NotificationType {
+  ORDER_STATUS
+  REMINDER
+  GENERAL
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  FAILED
+}
+
+//
+// MODELS
+//
+model User {
+  id              String   @id @default(uuid())
+  email           String   @unique
+  passwordHash    String
+  firstName       String
+  lastName        String
+  phoneNumber  	  String   // required
+  deliveryAddress Json?    // flexible: JSON or normalize into separate fields
+  role            UserRole @default(CUSTOMER)
+  emailConfirmed  Boolean  @default(false)
+  lastLoginAt     DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  deletedAt       DateTime?
+
+  // Relations
+  orders          Order[]
+  photos          Photo[]
+  notifications   Notification[]
+  refreshTokens   RefreshToken[]
+  accountTokens   AccountToken[]
+  updatedTexts    SiteText[] @relation("TextUpdatedBy")
+  statusChanges OrderStatusHistory[] @relation("StatusChangedBy")
+
+  @@map("users")
+}
+
+model PhotoshootPackage {
+  id          String   @id @default(uuid())
+  internalName String  @unique
+  displayName String
+  description String?
+  basePrice   Decimal  @db.Decimal(10,2)
+  durationHrs Int
+  maxPhotos   Int?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+
+  // Relations
+  orders      Order[]
+
+  @@map("photoshoot_packages")
+}
+
+model Order {
+  id          String       @id @default(uuid())
+  readableOrderNumber String   @unique
+  userId      String
+  packageId   String
+  shootDate   DateTime?
+  shootPlace  String?
+  status      OrderStatus  @default(PENDING)
+  notes       String?
+  basePrice   Decimal      @db.Decimal(10,2)
+  discount    Decimal      @db.Decimal(10,2) @default(0)
+  finalPrice  Decimal      @db.Decimal(10,2)
+  transportPrice  Decimal      @db.Decimal(10,2)
+  amountPaid  Decimal      @db.Decimal(10,2) @default(0)
+  currency    String       @default("EUR")
+
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  deletedAt   DateTime?
+
+  // Relations
+  user          User         @relation(fields: [userId], references: [id])
+  package       PhotoshootPackage @relation(fields: [packageId], references: [id])
+  statusHistory OrderStatusHistory[]
+  orderPhotos   OrderPhoto[]
+  notifications Notification[]
+
+  @@map("orders")
+}
+
+model OrderStatusHistory {
+  id        String      @id @default(uuid())
+  orderId   String
+  status    OrderStatus
+  changedAt DateTime    @default(now())
+  changedBy String?
+
+  // Relations
+  order     Order       @relation(fields: [orderId], references: [id])
+  admin     User?       @relation("StatusChangedBy", fields: [changedBy], references: [id])
+
+  @@map("order_status_history")
+}
+
+model Photo {
+  id          String   @id @default(uuid())
+  url         String
+  title       String?
+  description String?
+  isPublic    Boolean  @default(false)
+  isVisible   Boolean  @default(true)
+  uploadedBy  String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+
+  // Relations
+  uploader    User     @relation(fields: [uploadedBy], references: [id])
+  categories  PhotoCategoryMap[]
+  tags        PhotoTagMap[]
+  orderPhotos OrderPhoto[]
+
+  @@map("photos")
+}
+
+model PhotoCategory {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+
+  // Relations
+  photos      PhotoCategoryMap[]
+
+  @@map("photo_categories")
+}
+
+model PhotoTag {
+  id        String   @id @default(uuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  // Relations
+  photos    PhotoTagMap[]
+
+  @@map("photo_tags")
+}
+
+model PhotoCategoryMap {
+  photoId    String
+  categoryId String
+
+  // Relations
+  photo      Photo        @relation(fields: [photoId], references: [id])
+  category   PhotoCategory @relation(fields: [categoryId], references: [id])
+
+  @@id([photoId, categoryId])
+  @@map("photo_category_map")
+}
+
+model PhotoTagMap {
+  photoId String
+  tagId   String
+
+  // Relations
+  photo   Photo    @relation(fields: [photoId], references: [id])
+  tag     PhotoTag @relation(fields: [tagId], references: [id])
+
+  @@id([photoId, tagId])
+  @@map("photo_tag_map")
+}
+
+model OrderPhoto {
+  id                      String   @id @default(uuid())
+  orderId                 String
+  photoId                 String
+  isFinalDelivery         Boolean  @default(false)
+  toPostprocess Boolean @default(false)
+  toPrint   Boolean  @default(false)
+
+  // Relations
+  order   Order @relation(fields: [orderId], references: [id])
+  photo   Photo @relation(fields: [photoId], references: [id])
+
+  @@map("order_photos")
+}
+
+model SiteText {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  content   String
+  updatedAt DateTime @updatedAt
+  updatedBy String?
+  deletedAt DateTime?
+
+  // Relations
+  updater   User?    @relation("TextUpdatedBy", fields: [updatedBy], references: [id])
+
+  @@map("site_texts")
+}
+
+model Notification {
+  id        String             @id @default(uuid())
+  userId    String
+  orderId   String?
+  type      NotificationType
+  message   String
+  sentAt    DateTime?
+  status    NotificationStatus @default(PENDING)
+
+  // Relations
+  user      User @relation(fields: [userId], references: [id])
+  order     Order? @relation(fields: [orderId], references: [id])
+
+  @@map("notifications")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  revoked   Boolean  @default(false)
+
+  // Relations
+  user      User @relation(fields: [userId], references: [id])
+
+  @@map("refresh_tokens")
+}
+
+model AccountToken {
+  id        String    @id @default(uuid())
+  userId    String
+  token     String
+  type      TokenType
+  expiresAt DateTime
+  consumedAt DateTime?
+  createdAt DateTime @default(now())
+
+  // Relations
+  user      User @relation(fields: [userId], references: [id])
+
+  @@map("account_tokens")
+}

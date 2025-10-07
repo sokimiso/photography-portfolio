@@ -1,0 +1,96 @@
+@import "tailwindcss";
+
+/* -------------------------------
+   Light Theme
+--------------------------------- */
+:root {
+  /* Backgrounds */
+  --background: #F4F1DE;        /* main page background */
+  --foreground: #4b678d;        /* primary text */
+  --card-background: #2C2E43;   /* card/panel background */
+  --primary: #e76f51;           /* main accent / buttons */
+  --primary-light: #F2CC8F;     /* lighter accent */
+  --secondary: #e8f3f2;         /* secondary accent / links */
+
+  /* Font families */
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-heading: 'Playfair Display', serif;
+}
+
+/* -------------------------------
+   Dark Theme
+--------------------------------- */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #264653;       /* main dark background */
+    --foreground: #F4F1DE;       /* text for dark bg */
+    --card-background: #2C2E43;  /* slightly darker panels */
+    --primary: #ee6c4d;          /* accent remains same */
+    --primary-light: #F2CC8F;
+    --secondary: #e8f3f2;
+  }
+}
+
+/* -------------------------------
+   Apply variables
+--------------------------------- */
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Headings */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  color: var(--foreground);
+}
+
+/* Links */
+a {
+  color: var(--primary);
+  transition: color 0.2s ease;
+}
+a:hover {
+  color: var(--primary-light);
+}
+
+/* Buttons */ 
+.main-ui-button {
+  background-color: var(--primary);
+  color: white;
+  transition: all 0.2s ease;
+  font-size: 1rem;
+  line-height: normal;
+}
+
+.main-ui-button:hover {
+  filter: brightness(0.95);
+}
+
+.main-ui-button:focus {
+  outline: 2px solid var(--primary-dark, #0055aa);
+  outline-offset: 2px;
+}
+
+.main-ui-button:active {
+  filter: brightness(0.8);
+}
+
+/* Cards / Panels */
+.card {
+  background-color: var(--card-background);
+  color: var(--foreground);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
