@@ -3,6 +3,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { glassBoxStyle, statusColors } from "@/lib/constants/orders";
+import { useTexts } from "@/context/TextContext";
 
 export type Notification = {
   id: string;
@@ -18,6 +19,8 @@ type Props = {
 };
 
 export default function NotificationsPanel({ notifications, loading }: Props) {
+  const texts = useTexts();
+  
   const getTitle = (type: Notification["type"]) => {
     switch (type) {
       case "ORDER_STATUS":
@@ -42,7 +45,9 @@ export default function NotificationsPanel({ notifications, loading }: Props) {
           ))}
         </div>
       ) : notifications.length === 0 ? (
-        <div>Žiadne notifikácie</div>
+            <div className="text-gray-500 dark:text-gray-400">
+              {texts.dashboard?.notificationsPage?.noNotificationsMessage || "No notifications pending."}
+            </div>
       ) : (
         <div className="space-y-2">
           {notifications.map((n) => (

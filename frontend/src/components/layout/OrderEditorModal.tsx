@@ -115,7 +115,7 @@ export default function OrderEditorModal(props: OrderEditorModalProps) {
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const isSearchMode = !userForm && !isCreating && !isManageMode;
-  
+
   // Helper to reset all modal fields
   const resetAllFields = () => {
     setSearchQuery("");
@@ -144,7 +144,7 @@ export default function OrderEditorModal(props: OrderEditorModalProps) {
   } else if (isCreating) {
     modalTitle = "Vytvoriť novú objednávku";
   } else if (selectedOrder) {
-    modalTitle = `Editovať objednávku #${selectedOrder.readableOrderNumber}`;
+    modalTitle = "Editovať objednávku";
   }
 
   return (
@@ -187,7 +187,7 @@ export default function OrderEditorModal(props: OrderEditorModalProps) {
           <>
             {/* User Info */}
             <div>
-              <h2 className="font-medium mb-2">{selectedOrder?.readableOrderNumber ? `#${selectedOrder?.readableOrderNumber}` : ""}</h2>
+              <h2 className="text-xl font-semibold mb-4">{selectedOrder?.readableOrderNumber ? `#${selectedOrder?.readableOrderNumber}` : ""}</h2>
               <span className="text-red-500 font-semibold text-xl ml-2">{selectedOrder?.deletedAt ? `DELETED at ${formatDate(selectedOrder?.deletedAt)}` : ""}</span>
               <h3 className="font-medium mb-2">Informácie o používateľovi</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

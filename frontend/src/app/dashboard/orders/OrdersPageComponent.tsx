@@ -7,14 +7,22 @@ import Breadcrumb from "../components/Breadcrumb";
 import OrderEditorModal from "@/components/layout/OrderEditorModal";
 import { OrderResult, UserResult, PhotoshootPackage } from "@/types/order.dto";
 import { glassBoxStyle, statusColors } from "@/lib/constants/orders";
+import { DataTable } from "@/components/ui/DataTable";
 
 export default function OrdersPageComponent() {
   const { token } = useAuth();
   const { toast } = useToast();
 
+  // Select user
+  const handleUserSelect = (user: UserResult) => setSelectedUser(user);  
+
+  // Table content
+  const [selectedStatus, setSelectedStatus] = useState<"CONFIRMED" | "PENDING" | "CANCELED">("CONFIRMED");
+
   // Orders
   const [pendingOrders, setPendingOrders] = useState<OrderResult[]>([]);
   const [confirmedOrders, setConfirmedOrders] = useState<OrderResult[]>([]);
+  const [pendingPaymentOrders, setPendingPaymentOrders] = useState<OrderResult[]>([]);
 
   // Packages
   const [packages, setPackages] = useState<PhotoshootPackage[]>([]);
@@ -24,7 +32,7 @@ export default function OrdersPageComponent() {
   const [isManageMode, setIsManageMode] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<OrderResult | null>(null);
 
-  // Form state (lifted)
+  // Form state
   const [selectedUser, setSelectedUser] = useState<UserResult | null>(null);
   const [selectedPackageId, setSelectedPackageId] = useState("");
   const [shootDate, setShootDate] = useState("");
@@ -36,21 +44,17 @@ export default function OrdersPageComponent() {
   const [transportPrice, setTransportPrice] = useState(0);
   const [amountPaid, setAmountPaid] = useState(0);
   const [status, setStatus] = useState<OrderResult["status"]>("PENDING");
-  const [pendingPaymentOrders, setPendingPaymentOrders] = useState<OrderResult[]>([]);
 
   // Search
   const [searchQuery, setSearchQuery] = useState("");
   const { results, globalSearch, loading: loadingSearch, setResults } = useGlobalSearch(
     process.env.NEXT_PUBLIC_API_URL!
   );
-
-  // Search results
   const searchResultsUsers = results.users;
   const searchResultsOrders = results.orders;
 
-  // Fetch orders
+  /** Fetch orders */
   const fetchOrders = async () => {
-
     try {
       const [pendingRes, confirmedRes, pendingPaymentsRes] = await Promise.all([
         apiClient.get<OrderResult[]>("/api/orders/pending", { withCredentials: true }),
@@ -70,23 +74,31 @@ export default function OrdersPageComponent() {
     }
   };
 
-
-  // Fetch packages
+  /** Fetch packages */
   const fetchPackages = async () => {
-    if (!token) return;
     try {
-      const res = await apiClient.get<PhotoshootPackage[]>("/api/orders/packages");
-      setPackages(res.data);
+      const res = await apiClient.get<{ packages: PhotoshootPackage[] }>("/api/packages", {
+        withCredentials: true, // include cookies
+      });
+      // Extract the array from the object
+      const packagesData = res.data.packages || [];
+
+      setPackages(packagesData);
     } catch (err: any) {
-      toast({ title: "Error loading packages", description: err?.response?.data?.message || "Try again later.", variant: "destructive" });
+      console.error("Error fetching packages:", err);
+      toast({ 
+        title: "Error loading packages", 
+        description: err?.response?.data?.message || "Try again later.", 
+        variant: "destructive" 
+      });
     }
   };
+
 
   useEffect(() => {
     fetchOrders();
     fetchPackages();
   }, [token]);
-
 
   /** Debounced search */
   useEffect(() => {
@@ -111,7 +123,7 @@ export default function OrdersPageComponent() {
     if (order) {
       setSelectedOrder(order);
       setSelectedUser(order.user);
-      setSelectedPackageId(order.package.id);
+      setSelectedPackageId(order.package?.id?.toString() || packages[0]?.id?.toString() || "");
       setShootDate(order.shootDate?.split("T")[0] || "");
       setNotes(order.notes || "");
       setShootPlace(order.shootPlace || "");
@@ -124,7 +136,7 @@ export default function OrdersPageComponent() {
     } else {
       setSelectedOrder(null);
       setSelectedUser(null);
-      setSelectedPackageId(packages[0]?.id || "");
+      setSelectedPackageId(packages[0]?.id?.toString() || "");
       setShootDate("");
       setShootPlace("");
       setNotes("");
@@ -144,33 +156,17 @@ export default function OrdersPageComponent() {
     openOrderModal();
   };
 
-  /** Select user */
-  const handleUserSelect = (user: UserResult) => setSelectedUser(user);
-
-  /** Save / Delete order */
+  /** Save / Delete */
   const handleSaveOrder = async () => {
-    if (!selectedUser?.id || !selectedPackageId) {
-      return toast({
-        title: "Missing details",
-        description: "Fill user and package.",
-        variant: "destructive",
-      });
-    }
-
+    if (!selectedUser?.id || !selectedPackageId) return toast({ title: "Missing details", description: "Fill user and package.", variant: "destructive" });
+    
     const payload = {
       packageId: selectedPackageId,
       shootDate: shootDate ? new Date(shootDate).toISOString() : undefined,
-      notes,
-      shootPlace,
-      discount,
-      basePrice,
-      finalPrice,
-      transportPrice,
-      amountPaid,
-      status,
+      notes, shootPlace, discount, basePrice, finalPrice, transportPrice, amountPaid, status,
       userId: selectedUser.id,
     };
-
+    
     try {
       if (selectedOrder) await apiClient.put(`/api/orders/${selectedOrder.id}`, payload, { withCredentials: true });
       else await apiClient.post("/api/orders/create", payload, { withCredentials: true });
@@ -178,11 +174,7 @@ export default function OrdersPageComponent() {
       setIsModalOpen(false);
       await fetchOrders();
     } catch (err: any) {
-      toast({
-        title: "Error",
-        description: err?.response?.data?.message || "Something went wrong",
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: err?.response?.data?.message || "Something went wrong", variant: "destructive" });
     }
   };
 
@@ -192,60 +184,68 @@ export default function OrdersPageComponent() {
       toast({ title: "Order deleted" });
       await fetchOrders();
     } catch (err: any) {
-      toast({
-        title: "Error deleting order",
-        description: err?.response?.data?.message || "Something went wrong",
-        variant: "destructive",
-      });
+      toast({ title: "Error deleting order", description: err?.response?.data?.message || "Something went wrong", variant: "destructive" });
     }
   };
 
-
-  /** UI */
-  const OrdersSection = ({ title, orders }: { title: string; orders: OrderResult[] }) => (
-    <div className={`p-4 ${glassBoxStyle}`}>
-      <h2 className="font-bold mb-2">{title}</h2>
-      {orders.length === 0 ? (
-        <div>No {title.toLowerCase()}</div>
-      ) : (
-        <div className="flex flex-wrap gap-4">
-          {orders.map((o) => (
-            <div
-              key={o.id}
-              className={`w-fit min-w-[250px] max-w-[300px] p-4 rounded-xl ${statusColors[o.status]} backdrop-blur-md border border-white/20 shadow-xl transition-transform duration-200 hover:scale-105 hover:shadow-2xl`}
-              onClick={() => openOrderModal(o)}
-            >
-              <div className="font-bold text-2xl">{o.readableOrderNumber}</div>
-              <div className="text-sm">
-                {o.user.firstName} {o.user.lastName}
-              </div>
-              <div className="text-sm">{o.package.displayName}</div>
-              <div className="text-sm">
-                K úhrade: {o.finalPrice - (o.amountPaid ?? 0)} €
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
+  /** Columns for DataTable */
+  const confirmedColumns = [
+    { key: "readableOrderNumber", header: "Order #", className: "font-semibold" },
+    { key: "user", header: "Client", render: (o: OrderResult) => `${o.user.firstName} ${o.user.lastName}` },
+    { key: "package", header: "Package", render: (o: OrderResult) => o.package.displayName },
+    { key: "shootDate", header: "Shoot Date", render: (o: OrderResult) => o.shootDate ? new Date(o.shootDate).toLocaleDateString("sk-SK") : "-" },
+    { key: "finalPrice", header: "Balance (€)", align: "right" as const, render: (o: OrderResult) => (o.finalPrice - (o.amountPaid ?? 0)).toFixed(2) },
+  ];
 
   return (
     <div className="space-y-6">
       <Breadcrumb path={["Dashboard", "Orders"]} />
+
       <div className={`flex gap-4 ${glassBoxStyle} p-4`}>
-        <button onClick={() => openOrderModal()} className="px-4 py-2 w-40 rounded main-ui-button">
-          Create New Order
-        </button>
-        <button onClick={openManageModal} className="px-4 py-2 w-40 rounded main-ui-button">
-          Manage Order
-        </button>
+        <button onClick={() => openOrderModal()} className="px-4 py-2 w-40 rounded main-ui-button">Create New Order</button>
+        <button onClick={openManageModal} className="px-4 py-2 w-40 rounded main-ui-button">Manage Order</button>
       </div>
 
-      {pendingOrders.length > 0 && <OrdersSection title="Pending Orders" orders={pendingOrders} />}
-      {confirmedOrders.length > 0 && <OrdersSection title="Confirmed Orders" orders={confirmedOrders} />}
+      {pendingOrders.length > 0 && (
+        <div className={`p-4 ${glassBoxStyle}`}>
+          <h2 className="font-bold mb-2">Pending Orders</h2>
+          <div className="flex flex-wrap gap-4">
+            {pendingOrders.map((o) => (
+              <div key={o.id} className={`w-fit max-w-[200px] p-2 rounded-xl ${statusColors[o.status]} backdrop-blur-md border border-white/20 shadow-xl hover:scale-105 hover:shadow-2xl`} onClick={() => openOrderModal(o)}>
+                <div className="font-bold text-2xl">{o.readableOrderNumber}</div>
+                <div className="text-sm">{o.user.firstName} {o.user.lastName}</div>
+                <div className="text-sm">{o.package.displayName}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {pendingPaymentOrders.length > 0 && (
-        <OrdersSection title="Pending Payments" orders={pendingPaymentOrders} />
+        <div className={`p-4 ${glassBoxStyle}`}>
+          <h2 className="font-bold mb-2">Pending Payments</h2>
+          <div className="flex flex-wrap gap-4">
+            {pendingPaymentOrders.map((o) => (
+              <div key={o.id} className={`w-fit max-w-[200px] p-2 rounded-xl ${statusColors[o.status]} backdrop-blur-md border border-white/20 shadow-xl hover:scale-105 hover:shadow-2xl`} onClick={() => openOrderModal(o)}>
+                <div className="font-bold text-2xl">{o.readableOrderNumber}</div>
+                <div className="text-sm">{o.user.firstName} {o.user.lastName}</div>
+                <div className="text-sm">K úhrade: {o.finalPrice - (o.amountPaid ?? 0)} €</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {confirmedOrders.length > 0 && (
+        <div className={`p-4 ${glassBoxStyle}`}>
+          <h2 className="font-bold mb-2">Confirmed Orders</h2>
+          <DataTable
+            data={confirmedOrders}
+            columns={confirmedColumns}
+            onRowClick={openOrderModal}
+            loading={false}
+          />
+        </div>
       )}
 
       <OrderEditorModal

@@ -4,6 +4,8 @@ import { OrderResult } from "@hooks/useGlobalSearch";
 import { glassBoxStyle, statusColors } from "@/lib/constants/orders";
 import { useRouter } from "next/navigation";
 import { useTexts } from "@/context/TextContext";
+import { CalendarDays, CalendarPlus } from "lucide-react";
+import { DataTable } from "@/components/ui/DataTable";
 
 type Props = {
   confirmedOrders: OrderResult[];
@@ -14,110 +16,168 @@ export default function ConfirmedOrdersPanel({ confirmedOrders, loading }: Props
   const router = useRouter();
   const texts = useTexts();
 
-  const handleViewOrders = () => {
-    router.push("/dashboard/orders");
+  // Helper: Get start/end for this and next week (Mon → Sun)
+  const getWeekRanges = () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const dayOfWeek = (today.getDay() + 6) % 7; // Monday=0, Sunday=6
+
+    const thisMonday = new Date(today);
+    thisMonday.setDate(today.getDate() - dayOfWeek);
+    thisMonday.setHours(0, 0, 0, 0);
+
+    const thisSunday = new Date(thisMonday);
+    thisSunday.setDate(thisMonday.getDate() + 6);
+    thisSunday.setHours(23, 59, 59, 999);
+
+    const nextMonday = new Date(thisMonday);
+    nextMonday.setDate(thisMonday.getDate() + 7);
+    nextMonday.setHours(0, 0, 0, 0);
+
+    const nextSunday = new Date(nextMonday);
+    nextSunday.setDate(nextMonday.getDate() + 6);
+    nextSunday.setHours(23, 59, 59, 999);
+
+    return { today, thisMonday, thisSunday, nextMonday, nextSunday };
   };
 
-  // helper to calculate days left
+  const { today, thisMonday, thisSunday, nextMonday, nextSunday } = getWeekRanges();
+
+  // Split confirmed orders by time range
+  const overdueOrders = confirmedOrders.filter((order) => {
+    if (!order.shootDate) return false;
+    const date = new Date(order.shootDate);
+    return date < today; // overdue
+  });
+
+  const thisWeekOrders = confirmedOrders.filter((order) => {
+    if (!order.shootDate) return false;
+    const date = new Date(order.shootDate);
+    return date >= thisMonday && date <= thisSunday;
+  });
+
+  const nextWeekOrders = confirmedOrders.filter((order) => {
+    if (!order.shootDate) return false;
+    const date = new Date(order.shootDate);
+    return date >= nextMonday && date <= nextSunday;
+  });
+
   const getDaysLeft = (shootDate?: string) => {
     if (!shootDate) return null;
     const diffMs = new Date(shootDate).getTime() - new Date().getTime();
-    return Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
+    return Math.ceil(diffMs / (1000 * 60 * 60 * 24));
   };
 
-  // show only upcomming orders in next 7 days
-  const upcoming = confirmedOrders.filter((order) => {
-    if (!order.shootDate) return false;
-    const daysLeft = getDaysLeft(order.shootDate);
-    return daysLeft !== null && daysLeft >= 0 && daysLeft <= 7;
-  });
+  // Helper for week range label
+  const formatRange = (start: Date, end: Date) =>
+    `${start.toLocaleDateString("sk-SK", { day: "2-digit", month: "2-digit" })} – ${end.toLocaleDateString("sk-SK", { day: "2-digit", month: "2-digit" })}`;
+  const columns = [
+    {
+      key: "shootDate",
+      header: texts.dashboard?.ordersPage?.orders?.shootDate || "Date",
+      render: (order: OrderResult) => {
+
+        if (!order.shootDate) return false; // filter
+        const date = new Date(order.shootDate); // safe
+
+        const daysLeft = getDaysLeft(order.shootDate);
+        return (
+          <>
+            {date.toLocaleDateString("sk-SK", {
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+            })}{" "}
+            ({daysLeft !== null ? (daysLeft >= 0 ? `${daysLeft} dní` : "overdue") : ""})
+          </>
+        );
+      },
+    },
+    {
+      key: "shootPlace",
+      header: texts.dashboard?.ordersPage?.orders?.shootPlace || "Place",
+      className: "font-semibold",
+    },
+    {
+      key: "user",
+      header: texts.dashboard?.ordersPage?.orders?.client || "Client",
+      render: (order: OrderResult) =>
+        `${order.user.firstName} ${order.user.lastName} ${order.user.email}`,
+    },
+    {
+      key: "package",
+      header: texts.dashboard?.ordersPage?.orders?.package || "Package",
+      render: (order: OrderResult) => order.package.displayName,
+    },
+    {
+      key: "readableOrderNumber",
+      header: texts.dashboard?.ordersPage?.orders?.orderNumber || "Order #",
+      className: "font-semibold",
+    },
+    {
+      key: "finalPrice",
+      header: texts.dashboard?.ordersPage?.orders?.finalPrice || "Balance (€)",
+      align: "right" as const,
+      render: (order: OrderResult) =>
+        (order.finalPrice - (order.amountPaid ?? 0)).toFixed(2),
+    },
+  ];
 
   return (
-    <div className={`p-4 mb-4 rounded-xl ${glassBoxStyle}`}>
-      <h2 className="text-lg font-bold mb-4 cursor-default flex items-center justify-between">
-        <span>
-           {texts.events?.thisWeeksEvents}
-        </span>
-
-        {confirmedOrders.length > 0 && (
-          <button
-            className="px-3 py-1 main-ui-button rounded"
-            onClick={handleViewOrders}
-          >
-            {texts.buttons.show}
-          </button>
-        )}
-      </h2>
-
-      {loading ? (
-        <div className="space-y-2 animate-pulse">
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="h-8 bg-gray-300 dark:bg-gray-700 rounded" />
-          ))}
+    <>
+      {/* Overdue Orders */}
+      {overdueOrders.length > 0 && (
+        <div className={`p-4 mb-4 rounded-xl ${glassBoxStyle}`}>
+          <h2 className="text-lg font-bold mb-4 flex items-center gap-2 text-red-600 dark:text-red-400">
+            <CalendarDays className="w-5 h-5" />
+            {texts.dashboard?.eventsPage?.overdueEvents || "Overdue Events"}
+          </h2>
+          <DataTable
+            data={overdueOrders}
+            columns={columns}
+            onRowClick={(order) => router.push(`/dashboard/orders/${order.id}`)}
+            loading={loading}
+            highlightRow={(o) => {
+              const daysLeft = getDaysLeft(o.shootDate);
+              return daysLeft !== null && daysLeft < 0;
+              }
+            }
+          />
         </div>
-      ) : upcoming.length > 0 ? (
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm border-collapse">
-            <thead>
-              <tr className="text-left text-gray-500 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700">
-                <th className="py-2 px-3 font-medium">{texts.orders?.shootDate || "Date"}</th>
-                <th className="py-2 px-3 font-medium">{texts.orders?.shootPlace || "Date"}</th>
-                <th className="py-2 px-3 font-medium">{texts.orders?.client || "Client"}</th>
-                <th className="py-2 px-3 font-medium">{texts.orders?.package || "Package"}</th>
-                <th className="py-2 px-3 font-medium">{texts.orders?.orderNumber || "Order #"}</th>
-                <th className="py-2 px-3 font-medium text-right">{texts.orders?.finalPrice || "Balance (€)"}</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {upcoming.map((order) => {
-                const daysLeft = getDaysLeft(order.shootDate);
-                const highlightCancelled = daysLeft !== null && daysLeft <= 1;
-
-                return (
-                  <tr
-                    key={order.id}
-                    className={`border-b border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors cursor-pointer ${
-                      highlightCancelled ? statusColors.CANCELLED : ""
-                     
-                    }`}
-                    onClick={() => router.push(`/dashboard/orders/${order.id}`)}
-                  >
-                    <td className="py-2 px-3">
-                      {order.shootDate ? (
-                        <>
-                          {new Date(order.shootDate).toLocaleDateString("sk-SK", {
-                            year: "numeric",
-                            month: "short",
-                            day: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                          {" "}(
-                          {daysLeft} dní)
-                        </>
-                      ) : (
-                        "-"
-                      )}
-                    </td>
-                    <td className="py-2 px-3 font-semibold">{order.shootPlace}</td>
-                    <td className="py-2 px-3">
-                      {order.user.firstName} {order.user.lastName} {order.user.email}
-                    </td>
-                    <td className="py-2 px-3">{order.package.displayName}</td>
-                    <td className="py-2 px-3 font-semibold">{order.readableOrderNumber}</td>
-                    <td className="py-2 px-3 text-right">
-                      {(order.finalPrice - (order.amountPaid ?? 0)).toFixed(2)}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      ) : (
-        <div className="text-gray-500 dark:text-gray-400">{texts.dashboard?.ordersPage?.noOrdersMessage}</div>
       )}
-    </div>
+
+      {/* This Week */}
+      <div className={`p-4 mb-4 rounded-xl ${glassBoxStyle}`}>
+        <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
+          <CalendarDays className="w-5 h-5 text-emerald-500" />
+          {texts.dashboard?.eventsPage?.thisWeeksEvents} ({formatRange(thisMonday, thisSunday)})
+        </h2>
+        <DataTable
+          data={thisWeekOrders}
+          columns={columns}
+          onRowClick={(order) => router.push(`/dashboard/orders/${order.id}`)}
+          loading={loading}
+          emptyMessage="No orders this week."
+        />
+      </div>
+
+      {/* Next Week */}
+      <div className={`p-4 mb-4 rounded-xl ${glassBoxStyle}`}>
+        <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
+          <CalendarPlus className="w-5 h-5 text-blue-500" />
+          {texts.dashboard?.eventsPage?.nextWeeksEvents || "Next Week"} ({formatRange(nextMonday, nextSunday)})
+        </h2>
+        <DataTable
+          data={nextWeekOrders}
+          columns={columns}
+          onRowClick={(order) => router.push(`/dashboard/orders/${order.id}`)}
+          loading={loading}
+          emptyMessage="No orders next week."
+        />
+      </div>
+    </>
   );
 }

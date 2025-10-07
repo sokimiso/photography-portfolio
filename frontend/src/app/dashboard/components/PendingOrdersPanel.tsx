@@ -14,12 +14,13 @@ type Props = {
 export default function PendingOrdersPanel({ pendingOrders, loading }: Props) {
 
   const router = useRouter(); // <-- init router
+  const texts = useTexts();
 
   const handleViewOrders = () => {
     router.push("/dashboard/orders"); // navigate programmatically
   };
 
- const texts = useTexts();  
+   
 
  return (
     <div className={`p-4 mb-4 rounded-xl ${glassBoxStyle}`}>
@@ -33,7 +34,9 @@ export default function PendingOrdersPanel({ pendingOrders, loading }: Props) {
           {texts.buttons.show}
         </button>
         ) : (
-          <div>{texts.dashboard?.ordersPage?.noOrdersMessage}</div>
+            <div className="text-gray-500 dark:text-gray-400">
+              {texts.dashboard?.ordersPage?.noOrdersMessage || "No orders pending."}
+            </div>
         )}
     </div>
   );

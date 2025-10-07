@@ -1,7 +1,6 @@
 "use client";
 
 import { createContext, ReactNode, useContext, useState, useEffect } from "react";
-import { text } from "stream/consumers";
 
 export interface Texts {
   menu: {
@@ -34,12 +33,38 @@ export interface Texts {
       pendingOrdersTitle: string;
       confirmedOrdersTitle: string;
       noOrdersMessage: string;
+      orders?: {
+        orderNumber: string;
+        client: string;
+        package: string;
+        shootDate: string;
+        shootPlace: string;
+        balance: string;
+        finalPrice: string;
+      };
+    };
+    eventsPage?: {
+      nextEvent: string;
+      nextEvents: string;
+      thisWeeksEvents: string;
+      nextWeeksEvents: string;
+      overdueEvents: string;
+      events?: {
+        nextEvent: string;
+        nextEvents: string;
+        thisWeeksEvents: string;
+        nextWeeksEvents: string;
+        overdueEvents: string;
+      },      
+    };
+    notificationsPage?: {
+      noNotificationsMessage: string;
     };
   };
   about?: {
     heading: string;
     description: string;
-  },
+  };
   buttons: {
     edit: string;
     save: string;
@@ -51,24 +76,10 @@ export interface Texts {
     create: string;
     manage: string;
     show: string;
-  }, 
-  events?: {
-    nextEvent: string;
-    nextEvents: string;
-    thisWeeksEvents: string;
-  }, 
-  orders?: {
-    orderNumber: string;
-    client: string;
-    package: string;
-    shootDate: string;
-    shootPlace: string;
-    balance: string;
-    finalPrice: string;
-  }     
-  footer?:{
+  };
+  footer?: {
     text: string;
-  }
+  };
 }
 
 const defaultTexts: Texts = {
@@ -111,13 +122,40 @@ const defaultTexts: Texts = {
       pendingOrdersTitle: "Objednávky čakajúce na schválenie",
       confirmedOrdersTitle: "Potvrdené objednávky",
       noOrdersMessage: "Žiadne objednávky",
+      orders: {
+        orderNumber: "Číslo obj.",
+        client: "Zákazník",
+        package: "Balík",
+        shootDate: "Termín fotenia",
+        shootPlace: "Miesto fotenia",
+        balance: "Suma",
+        finalPrice: "Konečná cena",
+      },
+    },
+    eventsPage: {
+      nextEvent: "Najbližšia udalosť",
+      nextEvents: "Najbližšie udalosti",
+      thisWeeksEvents: "Udalosti tento týždeň",
+      nextWeeksEvents: "Udalosti budúci týždeň",
+      overdueEvents: "Zmeškané udalosti",
+      events: {
+        nextEvent: "Najbližia udalosť",
+        nextEvents: "Najbližie udalosti",
+        thisWeeksEvents: "Udalosti tento týždeň",
+        nextWeeksEvents: "Udalosti budúci týždeň",
+        overdueEvents: "Zmeškané udalosti",
+      },
+
+    },
+    notificationsPage: {
+      noNotificationsMessage: "Žiadne notifikácie",
     },
   },
   about: {
     heading: "O mne",
     description:
       "Volám sa Michal Sokirka a som profesionálny fotograf zameraný na portréty detí, školské akcie a svadby. Snažím sa zachytiť jedinečné momenty a spomienky, ktoré vydržia celý život.",
-  }, 
+  },
   buttons: {
     edit: "Upraviť",
     save: "Uložiť",
@@ -129,26 +167,11 @@ const defaultTexts: Texts = {
     create: "Vytvoriť",
     manage: "Spravovať",
     show: "Zobraziť",
-  }, 
-  events: {
-    nextEvent: "Najbližia udalosť",
-    nextEvents: "Najbližie udalosti",
-    thisWeeksEvents: "Udalosti tento týždeň",
-  }, 
-  orders: {
-    orderNumber: "Číslo obj.",
-    client: "Zákazník",
-    package: "Balík",
-    shootDate: "Termín fotenia",
-    shootPlace: "Miesto fotenia",
-    balance: "Suma",
-    finalPrice: "Konečná cena",
   },
   footer: {
     text: "© 2025 Sokirka Photography. Všetky práva vyhradené.",
-  }, 
+  },
 };
-
 
 interface TextContextProps {
   texts: Texts;
@@ -192,3 +215,7 @@ export const TextProvider = ({ children }: { children: ReactNode }) => {
 
 export const useTexts = () => useContext(TextContext).texts;
 export const useSetTexts = () => useContext(TextContext).setTexts;
+
+
+
+
