@@ -37,7 +37,7 @@ export interface OrderResult {
   package: PackageResult;
 }
 
-export const useGlobalSearch = (apiUrl: string, token: string | null) => {
+export const useGlobalSearch = (apiUrl: string) => {
   const [results, setResults] = useState<{ users: UserResult[]; orders: OrderResult[] }>({
     users: [],
     orders: [],
@@ -46,13 +46,13 @@ export const useGlobalSearch = (apiUrl: string, token: string | null) => {
   const [message, setMessage] = useState("");
 
   const globalSearch = async (query: string) => {
-    if (!query.trim() || !token) return;
+    if (!query.trim()) return;
 
     setLoading(true);
     setMessage("");
     try {
       const res = await fetch(`${apiUrl}/api/search?query=${encodeURIComponent(query)}`, {
-        headers: { Authorization: `Bearer ${token}` },
+        credentials: "include",
       });
 
       if (!res.ok) throw new Error("Chyba pri hľadaní");

@@ -24,7 +24,7 @@ export const useConfirmedOrders = (token: string | null, role: string | null) =>
   const [loading, setLoading] = useState<boolean>(true);
 
   const fetchConfirmedOrders = async () => {
-    if (!token || !role || role !== "ADMIN") return;
+    if (role !== "ADMIN") return;
 
     setLoading(true);
 
@@ -32,7 +32,7 @@ export const useConfirmedOrders = (token: string | null, role: string | null) =>
       const res = await axios.get<OrderResult[]>(
         `${process.env.NEXT_PUBLIC_API_URL}/api/orders/confirmed`,
         {
-          headers: { Authorization: `Bearer ${token}` },
+          withCredentials: true,
         }
       );
       setConfirmedOrders(res.data || []);

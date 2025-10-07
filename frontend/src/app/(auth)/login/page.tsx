@@ -14,25 +14,10 @@ export default function LoginPage() {
     setError("");
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-
-      if (!res.ok) {
-        const errData = await res.json();
-        setError(errData.message || "Login failed");
-        return;
-      }
-
-      const data: { token: string; role: "ADMIN" | "CUSTOMER" } = await res.json();
-
-      // Call AuthProvider login
-      login(data.token, data.role);
-    } catch (err) {
+      await login(email, password); // AuthProvider handles API call, cookies, and state
+    } catch (err: any) {
       console.error(err);
-      setError("Unexpected error occurred");
+      setError(err?.response?.data?.message || "Login failed");
     }
   };
 

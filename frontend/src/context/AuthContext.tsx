@@ -1,80 +1,99 @@
 "use client";
 
 import { createContext, ReactNode, useContext, useState, useEffect } from "react";
-import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
+import apiClient from "@/lib/apiClient";
 
 export type UserRole = "ADMIN" | "CUSTOMER" | "GUEST" | null;
 
 interface AuthContextProps {
   loggedIn: boolean;
   role: "ADMIN" | "CUSTOMER" | null;
-  token: string | null;
+  token: string | null; // kept for backward compatibility
   user?: { id: string; firstName: string; lastName: string; email: string };
-  login: (token: string, role: "ADMIN" | "CUSTOMER") => void;
-  logout: () => void;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextProps>({
   loggedIn: false,
   role: null,
   token: null,
-  login: () => {},
-  logout: () => {},
+  login: async () => {},
+  logout: async () => {},
 });
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const router = useRouter();
   const [loggedIn, setLoggedIn] = useState(false);
   const [role, setRole] = useState<"ADMIN" | "CUSTOMER" | null>(null);
-  const [token, setToken] = useState<string | null>(null);
+  const [user, setUser] = useState<AuthContextProps["user"]>();
+  const [token] = useState<string | null>(null); // dummy placeholder for legacy code
 
-  // Initialize state from cookies or localStorage on mount
+  // On mount, check current user
+  const [loading, setLoading] = useState(true); 
+
   useEffect(() => {
-    const storedToken = Cookies.get("token") || localStorage.getItem("token") || null;
-    const storedRole = (Cookies.get("role") as "ADMIN" | "CUSTOMER" | undefined) || null;
+    const checkSession = async () => {
+      try {
+        const res = await apiClient.get("/api/auth/me", { withCredentials: true });
+        const currentUser = res.data.user;
+        setLoggedIn(true);
+        setRole(currentUser.role);
+        setUser(currentUser);
+      } catch {
+        setLoggedIn(false);
+        setRole(null);
+        setUser(undefined);
+      } finally {
+        setLoading(false); // <--- mark done
+      }
+    };
 
-    if (storedToken && storedRole) {
-      setToken(storedToken);
-      setLoggedIn(true);
-      setRole(storedRole);
-    }
+    checkSession();
   }, []);
 
-  const login = (jwt: string, userRole: "ADMIN" | "CUSTOMER") => {
-    // Store in cookies
-    Cookies.set("token", jwt, { expires: 7 });
-    Cookies.set("role", userRole, { expires: 7 });
 
-    // Store in localStorage
-    localStorage.setItem("token", jwt);
+  const login = async (email: string, password: string) => {
+    try {
+      // Send login request, backend sets HTTP-only cookie
+      await apiClient.post("/api/auth/login", { email, password }, { withCredentials: true });
 
-    setToken(jwt);
-    setLoggedIn(true);
-    setRole(userRole);
-    router.push("/dashboard");
+      // Fetch current user info using the cookie
+      const res = await apiClient.get("/api/auth/me", { withCredentials: true });
+
+      const loggedUser = res.data.user;
+
+      setLoggedIn(true);
+      setRole(loggedUser.role);
+      setUser(loggedUser);
+
+      router.push("/dashboard");
+    } catch (err: any) {
+      console.error("Login failed", err.response?.data || err.message);
+      throw err;
+    }
   };
 
-  const logout = () => {
-    // Remove from cookies
-    Cookies.remove("token");
-    Cookies.remove("role");
 
-    // Remove from localStorage
-    localStorage.removeItem("token");
-
-    setToken(null);
-    setLoggedIn(false);
-    setRole(null);
-    router.push("/");
+  const logout = async () => {
+    try {
+      await apiClient.post("/api/auth/logout"); // clear cookie
+    } catch (err) {
+      console.error("Logout failed", err);
+    } finally {
+      setLoggedIn(false);
+      setRole(null);
+      setUser(undefined);
+      router.push("/");
+    }
   };
 
   return (
-    <AuthContext.Provider value={{ loggedIn, role, token, login, logout }}>
+    <AuthContext.Provider value={{ loggedIn, role, token, user, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-// Hook for usage
 export const useAuth = () => useContext(AuthContext);

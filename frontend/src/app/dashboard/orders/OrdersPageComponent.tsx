@@ -41,8 +41,7 @@ export default function OrdersPageComponent() {
   // Search
   const [searchQuery, setSearchQuery] = useState("");
   const { results, globalSearch, loading: loadingSearch, setResults } = useGlobalSearch(
-    process.env.NEXT_PUBLIC_API_URL!,
-    token || null
+    process.env.NEXT_PUBLIC_API_URL!
   );
 
   // Search results
@@ -51,12 +50,12 @@ export default function OrdersPageComponent() {
 
   // Fetch orders
   const fetchOrders = async () => {
-    if (!token) return;
+
     try {
       const [pendingRes, confirmedRes, pendingPaymentsRes] = await Promise.all([
-        apiClient.get<OrderResult[]>("/api/orders/pending"),
-        apiClient.get<OrderResult[]>("/api/orders/confirmed"),
-        apiClient.get<OrderResult[]>("/api/orders/pending-payments"),
+        apiClient.get<OrderResult[]>("/api/orders/pending", { withCredentials: true }),
+        apiClient.get<OrderResult[]>("/api/orders/confirmed", { withCredentials: true }),
+        apiClient.get<OrderResult[]>("/api/orders/pending-payments", { withCredentials: true }),
       ]);
 
       setPendingOrders(pendingRes.data);
@@ -173,8 +172,8 @@ export default function OrdersPageComponent() {
     };
 
     try {
-      if (selectedOrder) await apiClient.put(`/api/orders/${selectedOrder.id}`, payload);
-      else await apiClient.post("/api/orders/create", payload);
+      if (selectedOrder) await apiClient.put(`/api/orders/${selectedOrder.id}`, payload, { withCredentials: true });
+      else await apiClient.post("/api/orders/create", payload, { withCredentials: true });
       toast({ title: selectedOrder ? "Order updated" : "Order created" });
       setIsModalOpen(false);
       await fetchOrders();
@@ -189,7 +188,7 @@ export default function OrdersPageComponent() {
 
   const handleDeleteOrder = async (orderId: string) => {
     try {
-      await apiClient.delete(`/api/orders/${orderId}`);
+      await apiClient.delete(`/api/orders/${orderId}`, { withCredentials: true });
       toast({ title: "Order deleted" });
       await fetchOrders();
     } catch (err: any) {

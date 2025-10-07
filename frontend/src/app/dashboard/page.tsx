@@ -7,14 +7,20 @@ import DashboardPageComponent from "./DashboardPageComponent";
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { role } = useAuth();
+  const { loggedIn, role } = useAuth();
 
-  // Redirect if not logged in
-    useEffect(() => {
-      if (!role) {
-        router.push("/login");
-      }
-    }, [role, router]);
-    
+  // Always watch loggedIn and role
+  useEffect(() => {
+    if (role !== null && !loggedIn) {
+      router.push("/login");
+    }
+  }, [loggedIn, role, router]);
+
+  // Show loading while AuthContext is initializing
+  if (role === null) return <div>Loading...</div>;
+
+  // Only render dashboard if logged in
+  if (!loggedIn) return null;
+
   return <DashboardPageComponent />;
 }

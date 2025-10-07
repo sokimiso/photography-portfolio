@@ -20,7 +20,7 @@ export const useNotifications = (token?: string, userId?: string) => {
     setLoading(true);
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/notifications/pending/${userId}`, {
-        headers: { Authorization: `Bearer ${token}` },
+        credentials: "include",
       });
 
       if (!res.ok) throw new Error("Failed to fetch notifications");
