@@ -34,6 +34,18 @@ export class OrdersController {
   async getConfirmedOrders(@Req() req: Request) {
     return this.ordersService.findOrdersByStatus('CONFIRMED');
   }
+  
+  @Get('cancelled')
+  @UseGuards(JwtAuthGuard)
+  async getCancelledOrders(@Req() req: Request) {
+    return this.ordersService.findOrdersByStatus('CANCELLED');
+  }
+
+  @Get('completed')
+  @UseGuards(JwtAuthGuard)
+  async getCompletedOrders(@Req() req: Request) {
+    return this.ordersService.findOrdersByStatus('COMPLETED');
+  }  
 
   @UseGuards(JwtAuthGuard)
   @Get('pending-payments')

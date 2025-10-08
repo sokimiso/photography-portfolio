@@ -39,8 +39,11 @@ export interface Texts {
         package: string;
         shootDate: string;
         shootPlace: string;
+        shootTime: string;
         balance: string;
         finalPrice: string;
+        status: string;
+        notes: string;
       };
     };
     eventsPage?: {
@@ -76,6 +79,13 @@ export interface Texts {
     create: string;
     manage: string;
     show: string;
+  };
+  common?:{
+    name: string;
+    lastName: string;
+    email: string;
+    phone: string;
+    package: string;
   };
   footer?: {
     text: string;
@@ -128,8 +138,11 @@ const defaultTexts: Texts = {
         package: "Balík",
         shootDate: "Termín fotenia",
         shootPlace: "Miesto fotenia",
+        shootTime: "Čas fotenia",
         balance: "Suma",
         finalPrice: "Konečná cena",
+        status: "Stav objednávky",
+        notes: "Poznámky",
       },
     },
     eventsPage: {
@@ -168,6 +181,13 @@ const defaultTexts: Texts = {
     manage: "Spravovať",
     show: "Zobraziť",
   },
+  common: {
+    name: "Meno",
+    lastName: "Priezvisko",
+    email: "email",
+    phone: "Telefón",
+    package: "Balíček",
+  },  
   footer: {
     text: "© 2025 Sokirka Photography. Všetky práva vyhradené.",
   },

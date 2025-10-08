@@ -141,7 +141,7 @@ export class OrdersService {
 
   // Find an order by status
   async findOrdersByStatus(
-    status: 'PENDING' | 'CONFIRMED',
+    status: 'PENDING' | 'CONFIRMED' | 'COMPLETED' | 'CANCELLED',
     limit?: number,
     orderDirection: 'asc' | 'desc' = 'asc'
   ): Promise<Order[]> {

@@ -6,6 +6,7 @@ import CustomSelect from "@/components/ui/CustomSelect";
 import { useScrollLock } from "@/hooks/useScrollLock";
 import { Label } from "@/components/ui/Label";
 import { formatDate } from "@/utils/formatDate";
+import { useTexts } from "@/context/TextContext";
 
 export type OrderPhoto = {
   id: string;
@@ -115,6 +116,7 @@ export default function OrderEditorModal(props: OrderEditorModalProps) {
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const isSearchMode = !userForm && !isCreating && !isManageMode;
+  const texts = useTexts();
 
   // Helper to reset all modal fields
   const resetAllFields = () => {
@@ -149,10 +151,10 @@ export default function OrderEditorModal(props: OrderEditorModalProps) {
 
   return (
   <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 overflow-hidden">
-    <div className="relative flex flex-col max-h-[90vh] sm:max-w-[95%] md:max-w-[85%] w-full rounded-xl bg-white/10 border border-white/20 backdrop-blur-md shadow-xl">
+    <div className="relative flex flex-col max-h-[90vh] sm:max-w-[95%] md:max-w-[85%] min-w-[50%] rounded-xl bg-white/10 border border-white/20 text-amber-50 backdrop-blur-md shadow-xl">
     
-      {/* Left side: User & Order Info */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-6 min-h-0">
+      {/* User & Order Info */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
         <h2 className="text-xl font-semibold mb-4">{modalTitle}</h2>
 
         {/* User Search */}
@@ -187,24 +189,24 @@ export default function OrderEditorModal(props: OrderEditorModalProps) {
           <>
             {/* User Info */}
             <div>
-              <h2 className="text-xl font-semibold mb-4">{selectedOrder?.readableOrderNumber ? `#${selectedOrder?.readableOrderNumber}` : ""}</h2>
-              <span className="text-red-500 font-semibold text-xl ml-2">{selectedOrder?.deletedAt ? `DELETED at ${formatDate(selectedOrder?.deletedAt)}` : ""}</span>
-              <h3 className="font-medium mb-2">Informácie o používateľovi</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <h2 className="text-xl font-semibold mb-4">{selectedOrder?.readableOrderNumber ? `#${selectedOrder?.readableOrderNumber}` : ""}
+              <span className="text-red-500 font-semibold text-xl ml-2">{selectedOrder?.deletedAt ? `DELETED at ${formatDate(selectedOrder?.deletedAt)}` : ""}</span></h2>
+              <h3 className="font-medium mb-2">Informácie o zákazníkovi</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 py-1">
                 <div className="flex flex-col">
-                  <Label>Meno</Label>
+                  <Label>{texts.common?.name}</Label>
                   <input value={userForm.firstName} readOnly className="p-2 rounded w-full bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100" />
                 </div>
                 <div className="flex flex-col">
-                  <Label>Priezvisko</Label>
+                  <Label>{texts.common?.lastName}</Label>
                   <input value={userForm.lastName} readOnly className="p-2 rounded w-full bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100" />
                 </div>
                 <div className="flex flex-col">
-                  <Label>Email</Label>
+                  <Label>{texts.common?.email}</Label>
                   <input value={userForm.email} readOnly className="p-2 rounded w-full bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100" />
                 </div>
                 <div className="flex flex-col">
-                  <Label>Telefón</Label>
+                  <Label>{texts.common?.phone}</Label>
                   <input value={userForm.phoneNumber} readOnly className="p-2 rounded w-full bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100" />
                 </div>
               </div>
@@ -213,9 +215,9 @@ export default function OrderEditorModal(props: OrderEditorModalProps) {
             {/* Order Info */}
             <div>
               <h3 className="font-medium mb-2">Informácie o objednávke</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                 <div className="flex flex-col">
-                  <Label>Balíček</Label>
+                  <Label>{texts.common?.package}</Label>
                   <CustomSelect
                     options={packages.map((p) => ({ id: p.id, name: p.displayName }))}
                     value={{ id: selectedPackageId, name: packages.find(p => p.id === selectedPackageId)?.displayName || "" }}
@@ -223,40 +225,20 @@ export default function OrderEditorModal(props: OrderEditorModalProps) {
                   />
                 </div>
 
-                <div className="flex flex-col">
-                  <Label>Dátum fotenia</Label>
-                  <input type="date" value={shootDate} onChange={(e) => setShootDate(e.target.value)} className={glassBoxStyle} />
-                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <span>
+                    <Label>Dátum fotenia</Label>
+                    <input type="date" value={shootDate} onChange={(e) => setShootDate(e.target.value)} className={glassBoxStyle} />
+                  </span>
+                  <span>
+                    <Label>Čas fotenia</Label>
+                    <input type="time" value={shootDate} onChange={(e) => setShootDate(e.target.value)} className={glassBoxStyle} />
+                  </span>  
+                </div>                
 
                 <div className="flex flex-col">
-                  <Label>Základná cena (€)</Label>
-                  <input type="number" value={basePrice} onChange={(e) => setBasePrice(Number(e.target.value))} className={glassBoxStyle} />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="flex flex-col">
-                    <Label>Doprava (€)</Label>
-                    <input type="number" value={transportPrice} onChange={(e) => setTransportPrice(Number(e.target.value))} className={glassBoxStyle} />
-                  </div>
-                  <div className="flex flex-col">
-                    <Label>Zľava (€)</Label>
-                    <input type="number" value={discount} onChange={(e) => setDiscount(Number(e.target.value))} className={glassBoxStyle} />
-                  </div>
-                </div>
-
-                <div className="flex flex-col">
-                  <Label>Konečná cena (€)</Label>
-                  <input type="number" value={finalPrice} onChange={(e) => setFinalPrice(Number(e.target.value))} className={glassBoxStyle} />
-                </div>
-
-                <div className="flex flex-col">
-                  <Label>Uhradené (€)</Label>
-                  <input type="number" value={amountPaid} onChange={(e) => setAmountPaid(Number(e.target.value))} className={glassBoxStyle} />
-                </div>
-
-                <div className="flex flex-col">
-                  <Label>Zostáva uhradiť (€)</Label>
-                  <input type="number" value={finalPrice - amountPaid} readOnly className={glassBoxStyle} />
+                  <Label>Miesto fotenia</Label>
+                  <input type="text" value={shootPlace} onChange={(e) => setShootPlace(e.target.value)} className={glassBoxStyle}  />
                 </div>
 
                 <div className="flex flex-col">
@@ -269,11 +251,44 @@ export default function OrderEditorModal(props: OrderEditorModalProps) {
                     getButtonClass={(val) => statusColors[val.id as OrderResult["status"]]}                  
                   />
                 </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <span>
+                    <Label>Základná cena (€)</Label>
+                    <input type="number" value={basePrice} onChange={(e) => setBasePrice(Number(e.target.value))} className={glassBoxStyle} />
+                  </span>
+                  <span>
+                    <Label>Doprava (€)</Label>
+                    <input type="number" value={transportPrice} onChange={(e) => setTransportPrice(Number(e.target.value))} className={glassBoxStyle} />
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <span>
+                    <Label>Zľava (€)</Label>
+                    <input type="number" value={discount} onChange={(e) => setDiscount(Number(e.target.value))} className={glassBoxStyle} />
+                  </span>
+                  <span>
+                    <Label>Konečná cena (€)</Label>
+                    <input type="number" value={finalPrice} onChange={(e) => setFinalPrice(Number(e.target.value))} className={glassBoxStyle} />
+                  </span>                  
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <span>
+                    <Label>Uhradené (€)</Label>
+                    <input type="number" value={amountPaid} onChange={(e) => setAmountPaid(Number(e.target.value))} className={glassBoxStyle} />
+                  </span>
+                  <span>
+                    <Label>Zostáva uhradiť (€)</Label>
+                    <input type="number" value={finalPrice - amountPaid} readOnly className={glassBoxStyle} />
+                  </span>
+                </div>
               </div>
 
               <div className="flex flex-col mt-4">
                 <Label>Poznámky</Label>
-                <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} className={glassBoxStyle} />
+                <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={5} className={glassBoxStyle} />
               </div>
             </div>
           </>
@@ -322,8 +337,8 @@ export default function OrderEditorModal(props: OrderEditorModalProps) {
 
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && selectedOrder && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/50">
-          <div className="flex flex-col max-w-md w-[90%] rounded-xl bg-white p-6 space-y-4 shadow-xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 overflow-hidden">
+          <div className="p-6 space-y-4 relative flex flex-col max-h-[90vh] sm:max-w-[95%] md:max-w-[85%] min-w-[50%] rounded-xl bg-white/10 border border-white/20 text-amber-50 backdrop-blur-md shadow-xl">
             <h3 className="text-lg font-semibold">Potvrdiť odstránenie</h3>
             <p>Ste si istý, že chcete odstrániť túto objednávku? Táto akcia je reverzibilná.</p>
             <div className="flex justify-end gap-2 mt-4">

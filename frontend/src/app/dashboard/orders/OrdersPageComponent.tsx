@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@context/AuthContext";
 import { useGlobalSearch } from "@hooks/useGlobalSearch";
 import apiClient from "@/lib/apiClient";
@@ -8,6 +10,8 @@ import OrderEditorModal from "@/components/layout/OrderEditorModal";
 import { OrderResult, UserResult, PhotoshootPackage } from "@/types/order.dto";
 import { glassBoxStyle, statusColors } from "@/lib/constants/orders";
 import { DataTable } from "@/components/ui/DataTable";
+import { Button } from "@/components/ui/button";
+import { link } from "fs";
 
 export default function OrdersPageComponent() {
   const { token } = useAuth();
@@ -17,11 +21,16 @@ export default function OrdersPageComponent() {
   const handleUserSelect = (user: UserResult) => setSelectedUser(user);  
 
   // Table content
-  const [selectedStatus, setSelectedStatus] = useState<"CONFIRMED" | "PENDING" | "CANCELED">("CONFIRMED");
+  const searchParams = useSearchParams();
+  const defaultStatus = (searchParams.get("status") as "CONFIRMED" | "PENDING" | "COMPLETED" | "CANCELLED") || "CONFIRMED";
+
+  const [selectedStatus, setSelectedStatus] = useState<typeof defaultStatus>(defaultStatus);
 
   // Orders
   const [pendingOrders, setPendingOrders] = useState<OrderResult[]>([]);
   const [confirmedOrders, setConfirmedOrders] = useState<OrderResult[]>([]);
+  const [cancelledOrders, setCancelledOrders] = useState<OrderResult[]>([]);
+    const [completedOrders, setCompletedOrders] = useState<OrderResult[]>([]);
   const [pendingPaymentOrders, setPendingPaymentOrders] = useState<OrderResult[]>([]);
 
   // Packages
@@ -56,14 +65,18 @@ export default function OrdersPageComponent() {
   /** Fetch orders */
   const fetchOrders = async () => {
     try {
-      const [pendingRes, confirmedRes, pendingPaymentsRes] = await Promise.all([
+      const [pendingRes, confirmedRes, cancelledRes, completedRes, pendingPaymentsRes] = await Promise.all([
         apiClient.get<OrderResult[]>("/api/orders/pending", { withCredentials: true }),
         apiClient.get<OrderResult[]>("/api/orders/confirmed", { withCredentials: true }),
+        apiClient.get<OrderResult[]>("/api/orders/cancelled", { withCredentials: true }),
+        apiClient.get<OrderResult[]>("/api/orders/completed", { withCredentials: true }),
         apiClient.get<OrderResult[]>("/api/orders/pending-payments", { withCredentials: true }),
       ]);
 
       setPendingOrders(pendingRes.data);
       setConfirmedOrders(confirmedRes.data);
+      setCancelledOrders(cancelledRes.data);
+      setCompletedOrders(completedRes.data);
       setPendingPaymentOrders(pendingPaymentsRes.data);
     } catch (err: any) {
       toast({ 
@@ -94,6 +107,21 @@ export default function OrdersPageComponent() {
     }
   };
 
+  // Filter orders
+  const filteredOrders = (() => {
+    switch (selectedStatus) {
+      case "CONFIRMED":
+        return confirmedOrders;
+      case "PENDING":
+        return pendingOrders;
+      case "CANCELLED":
+        return cancelledOrders;
+      case "COMPLETED":
+        return completedOrders;        
+      default:
+        return [];
+    }
+  })();  
 
   useEffect(() => {
     fetchOrders();
@@ -190,14 +218,15 @@ export default function OrdersPageComponent() {
 
   /** Columns for DataTable */
   const confirmedColumns = [
-    { key: "readableOrderNumber", header: "Order #", className: "font-semibold" },
-    { key: "user", header: "Client", render: (o: OrderResult) => `${o.user.firstName} ${o.user.lastName}` },
+    { key: "shootDate", header: "Shoot Date", render: (o: OrderResult) => o.shootDate ? new Date(o.shootDate).toLocaleDateString("sk-SK") : "-" , filter: true, sortable: true },
+    { key: "shootPlace", header: "Shoot Place", render: (o: OrderResult) => o.shootPlace || "(not disclosed)"},
     { key: "package", header: "Package", render: (o: OrderResult) => o.package.displayName },
-    { key: "shootDate", header: "Shoot Date", render: (o: OrderResult) => o.shootDate ? new Date(o.shootDate).toLocaleDateString("sk-SK") : "-" },
+    { key: "user", header: "Customer", render: (o: OrderResult) => `${o.user.firstName} ${o.user.lastName}` },
+    { key: "readableOrderNumber", header: "Order #", className: "font-semibold" },
     { key: "finalPrice", header: "Balance (€)", align: "right" as const, render: (o: OrderResult) => (o.finalPrice - (o.amountPaid ?? 0)).toFixed(2) },
   ];
 
-  return (
+    return (
     <div className="space-y-6">
       <Breadcrumb path={["Dashboard", "Orders"]} />
 
@@ -226,7 +255,7 @@ export default function OrdersPageComponent() {
           <h2 className="font-bold mb-2">Pending Payments</h2>
           <div className="flex flex-wrap gap-4">
             {pendingPaymentOrders.map((o) => (
-              <div key={o.id} className={`w-fit max-w-[200px] p-2 rounded-xl ${statusColors[o.status]} backdrop-blur-md border border-white/20 shadow-xl hover:scale-105 hover:shadow-2xl`} onClick={() => openOrderModal(o)}>
+              <div key={o.id} className={`w-fit max-w-[200px] p-2 rounded-xl ${statusColors["CANCELLED"]} backdrop-blur-md border border-white/20 shadow-xl hover:scale-105 hover:shadow-2xl`} onClick={() => openOrderModal(o)}>
                 <div className="font-bold text-2xl">{o.readableOrderNumber}</div>
                 <div className="text-sm">{o.user.firstName} {o.user.lastName}</div>
                 <div className="text-sm">K úhrade: {o.finalPrice - (o.amountPaid ?? 0)} €</div>
@@ -238,13 +267,60 @@ export default function OrdersPageComponent() {
 
       {confirmedOrders.length > 0 && (
         <div className={`p-4 ${glassBoxStyle}`}>
-          <h2 className="font-bold mb-2">Confirmed Orders</h2>
-          <DataTable
-            data={confirmedOrders}
-            columns={confirmedColumns}
-            onRowClick={openOrderModal}
-            loading={false}
-          />
+         
+<div className="overflow-x-auto mb-4">
+  <div className="flex gap-2 min-w-max relative px-1">
+    {["PENDING", "CONFIRMED", "COMPLETED", "CANCELLED"].map((status) => {
+      const isActive = selectedStatus === status;
+      return (
+        <div key={status} className="relative flex-shrink-0">
+          <Button
+            variant="link"
+            onClick={() => setSelectedStatus(status as typeof selectedStatus)}
+            className={`
+              relative px-3 py-1 text-sm font-medium transition-colors duration-200
+              ${isActive ? "text-blue-600 dark:text-blue-400" : "text-gray-500 hover:text-blue-500"}
+            `}
+          >
+            {status.toLowerCase().replace(/^\w/, (c) => c.toUpperCase())} Orders
+            <AnimatePresence>
+              {isActive && (
+                <motion.div
+                  layoutId="active-underline"
+                  className="absolute left-0 bottom-0 w-full h-[2px] bg-blue-500 dark:bg-blue-400 rounded"
+                  transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                  initial={{ opacity: 0, y: 2 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 2 }}
+                />
+              )}
+            </AnimatePresence>
+          </Button>
+        </div>
+      );
+    })}
+  </div>
+</div>
+
+  
+
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={selectedStatus} // important to re-trigger animation on tab change
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+            >
+              <DataTable
+                data={filteredOrders}
+                columns={confirmedColumns}
+                onRowClick={openOrderModal}
+                loading={false}
+                emptyMessage={`No ${selectedStatus.toLowerCase()} orders.`}
+              />
+            </motion.div>
+          </AnimatePresence>
         </div>
       )}
 

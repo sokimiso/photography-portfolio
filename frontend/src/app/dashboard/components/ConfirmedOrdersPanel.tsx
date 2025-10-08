@@ -69,6 +69,13 @@ export default function ConfirmedOrdersPanel({ confirmedOrders, loading }: Props
     return Math.ceil(diffMs / (1000 * 60 * 60 * 24));
   };
 
+  // Combine this week + next week into one unified list (today → next Sunday)
+  const upcomingOrders = confirmedOrders.filter((order) => {
+    if (!order.shootDate) return false;
+    const date = new Date(order.shootDate);
+    return date >= today && date <= nextSunday;
+  });
+
   // Helper for week range label
   const formatRange = (start: Date, end: Date) =>
     `${start.toLocaleDateString("sk-SK", { day: "2-digit", month: "2-digit" })} – ${end.toLocaleDateString("sk-SK", { day: "2-digit", month: "2-digit" })}`;
@@ -149,35 +156,22 @@ export default function ConfirmedOrdersPanel({ confirmedOrders, loading }: Props
         </div>
       )}
 
-      {/* This Week */}
+      {/* Upcoming Events (Today → Next Sunday) */}
       <div className={`p-4 mb-4 rounded-xl ${glassBoxStyle}`}>
         <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
           <CalendarDays className="w-5 h-5 text-emerald-500" />
-          {texts.dashboard?.eventsPage?.thisWeeksEvents} ({formatRange(thisMonday, thisSunday)})
+          {texts.dashboard?.eventsPage?.nextEvents || "Upcoming Events"} ({formatRange(today, nextSunday)})
         </h2>
+
         <DataTable
-          data={thisWeekOrders}
+          data={upcomingOrders}
           columns={columns}
           onRowClick={(order) => router.push(`/dashboard/orders/${order.id}`)}
           loading={loading}
-          emptyMessage="No orders this week."
+          emptyMessage="No upcoming orders between now and next Sunday."
         />
       </div>
 
-      {/* Next Week */}
-      <div className={`p-4 mb-4 rounded-xl ${glassBoxStyle}`}>
-        <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
-          <CalendarPlus className="w-5 h-5 text-blue-500" />
-          {texts.dashboard?.eventsPage?.nextWeeksEvents || "Next Week"} ({formatRange(nextMonday, nextSunday)})
-        </h2>
-        <DataTable
-          data={nextWeekOrders}
-          columns={columns}
-          onRowClick={(order) => router.push(`/dashboard/orders/${order.id}`)}
-          loading={loading}
-          emptyMessage="No orders next week."
-        />
-      </div>
     </>
   );
 }
