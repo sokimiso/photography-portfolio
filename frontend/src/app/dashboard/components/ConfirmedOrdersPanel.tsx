@@ -145,7 +145,7 @@ export default function ConfirmedOrdersPanel({ confirmedOrders, loading }: Props
           <DataTable
             data={overdueOrders}
             columns={columns}
-            onRowClick={(order) => router.push(`/dashboard/orders/${order.id}`)}
+            //onRowClick={(order) => router.push(`/dashboard/orders/${order.id}`)}
             loading={loading}
             highlightRow={(o) => {
               const daysLeft = getDaysLeft(o.shootDate);
@@ -166,7 +166,7 @@ export default function ConfirmedOrdersPanel({ confirmedOrders, loading }: Props
         <DataTable
           data={upcomingOrders}
           columns={columns}
-          onRowClick={(order) => router.push(`/dashboard/orders/${order.id}`)}
+          //onRowClick={(order) => router.push(`/dashboard/orders/${order.id}`)}
           loading={loading}
           emptyMessage="No upcoming orders between now and next Sunday."
         />

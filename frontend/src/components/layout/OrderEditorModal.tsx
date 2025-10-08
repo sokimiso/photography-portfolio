@@ -44,6 +44,8 @@ interface OrderEditorModalProps {
   shootDate: string;
   setShootDate: (val: string) => void;
 
+  createdAt: string;
+
   notes: string;
   setNotes: (val: string) => void;
 
@@ -93,6 +95,7 @@ export default function OrderEditorModal(props: OrderEditorModalProps) {
     setSelectedPackageId,
     shootDate,
     setShootDate,
+    createdAt,
     shootPlace,
     setShootPlace,    
     notes,
@@ -189,8 +192,20 @@ export default function OrderEditorModal(props: OrderEditorModalProps) {
           <>
             {/* User Info */}
             <div>
-              <h2 className="text-xl font-semibold mb-4">{selectedOrder?.readableOrderNumber ? `#${selectedOrder?.readableOrderNumber}` : ""}
-              <span className="text-red-500 font-semibold text-xl ml-2">{selectedOrder?.deletedAt ? `DELETED at ${formatDate(selectedOrder?.deletedAt)}` : ""}</span></h2>
+            <h2 className="text-xl font-semibold mb-4 flex justify-between items-center">
+              <span>
+                {selectedOrder?.readableOrderNumber ? `#${selectedOrder.readableOrderNumber}` : ""}
+                {selectedOrder?.deletedAt && (
+                  <span className="text-red-500 font-semibold ml-2">
+                    DELETED at {formatDate(selectedOrder.deletedAt)}
+                  </span>
+                )}
+              </span>
+
+              <span className="font-semibold">
+                Vytvorené: {formatDate(selectedOrder?.createdAt) || ""}
+              </span>
+            </h2>
               <h3 className="font-medium mb-2">Informácie o zákazníkovi</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2 py-1">
                 <div className="flex flex-col">
@@ -232,7 +247,7 @@ export default function OrderEditorModal(props: OrderEditorModalProps) {
                   </span>
                   <span>
                     <Label>Čas fotenia</Label>
-                    <input type="time" value={shootDate} onChange={(e) => setShootDate(e.target.value)} className={glassBoxStyle} />
+                    <input type="time" value=""  className={glassBoxStyle} />
                   </span>  
                 </div>                
 

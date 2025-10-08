@@ -11,7 +11,6 @@ import { OrderResult, UserResult, PhotoshootPackage } from "@/types/order.dto";
 import { glassBoxStyle, statusColors } from "@/lib/constants/orders";
 import { DataTable } from "@/components/ui/DataTable";
 import { Button } from "@/components/ui/button";
-import { link } from "fs";
 
 export default function OrdersPageComponent() {
   const { token } = useAuth();
@@ -30,7 +29,7 @@ export default function OrdersPageComponent() {
   const [pendingOrders, setPendingOrders] = useState<OrderResult[]>([]);
   const [confirmedOrders, setConfirmedOrders] = useState<OrderResult[]>([]);
   const [cancelledOrders, setCancelledOrders] = useState<OrderResult[]>([]);
-    const [completedOrders, setCompletedOrders] = useState<OrderResult[]>([]);
+  const [completedOrders, setCompletedOrders] = useState<OrderResult[]>([]);
   const [pendingPaymentOrders, setPendingPaymentOrders] = useState<OrderResult[]>([]);
 
   // Packages
@@ -45,6 +44,7 @@ export default function OrdersPageComponent() {
   const [selectedUser, setSelectedUser] = useState<UserResult | null>(null);
   const [selectedPackageId, setSelectedPackageId] = useState("");
   const [shootDate, setShootDate] = useState("");
+  const [createdAt] = useState("");  
   const [shootPlace, setShootPlace] = useState("");
   const [notes, setNotes] = useState("");
   const [discount, setDiscount] = useState(0);
@@ -339,7 +339,8 @@ export default function OrdersPageComponent() {
         shootDate={shootDate}
         setShootDate={setShootDate}
         shootPlace={shootPlace}
-        setShootPlace={setShootPlace}        
+        setShootPlace={setShootPlace} 
+        createdAt={createdAt}   
         notes={notes}
         setNotes={setNotes}
         discount={discount}
