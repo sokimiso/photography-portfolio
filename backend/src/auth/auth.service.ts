@@ -24,8 +24,12 @@ export class AuthService {
   async login(loginDto: LoginDto) {
     const user = await this.validateUser(loginDto.email, loginDto.password);
 
+    // Update last login timestamp using usersService
+    await this.usersService.updateLastLogin(user.id);
+
     const payload = { sub: user.id, role: user.role };
     const token = this.jwtService.sign(payload);
+    
 
     return {
       token,

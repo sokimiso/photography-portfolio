@@ -18,8 +18,6 @@ export default function UsersPageComponent() {
   const { toast } = useToast();
 
   const [selectedStatus, setSelectedStatus] = useState<typeof STATUS_TYPES[number]>("confirmed");
-
-  // Store users by status
   const [usersByStatus, setUsersByStatus] = useState<Record<string, UserResult[]>>({
     pending: [],
     confirmed: [],
@@ -36,20 +34,22 @@ export default function UsersPageComponent() {
     process.env.NEXT_PUBLIC_API_URL!
   );
 
+  // Editable fields
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("0");
+
   /** Fetch users by status */
   const fetchUsersByStatus = async () => {
     try {
       const promises = STATUS_TYPES.map((status) =>
         apiClient.get<UserResult[]>(`/api/users/status/${status}`, { withCredentials: true })
       );
-
       const responses = await Promise.all(promises);
       const data = Object.fromEntries(
         STATUS_TYPES.map((status, i) => [status, responses[i].data])
       ) as Record<string, UserResult[]>;
-
       setUsersByStatus(data);
-      console.log("Fetched users by status:", data.confirmed);
     } catch (err: any) {
       toast({
         title: "Error loading users",
@@ -59,7 +59,6 @@ export default function UsersPageComponent() {
     }
   };
 
-  /** Fetch on mount or token change */
   useEffect(() => {
     fetchUsersByStatus();
   }, [token]);
@@ -74,12 +73,17 @@ export default function UsersPageComponent() {
 
   /** Modal handlers */
   const openUserModal = (user?: UserResult) => {
-    if (user) {
-      setSelectedUser(user);
-    } else {
-      setSelectedUser(null);
+    setSelectedUser(user || null);
+    if (!user) {
       setSearchQuery("");
       setResults({ users: [], orders: [] });
+      setFirstName("");
+      setLastName("");
+      setPhoneNumber("0");
+    } else {
+      setFirstName(user.firstName || "");
+      setLastName(user.lastName || "");
+      setPhoneNumber(user.phoneNumber || "0");
     }
     setIsModalOpen(true);
   };
@@ -159,8 +163,8 @@ export default function UsersPageComponent() {
 
             return (
               <Button
-              key={status}  
-              variant="link"
+                key={status}
+                variant="link"
                 onClick={() => setSelectedStatus(status as typeof selectedStatus)}
                 className={`
                   relative px-3 py-1 text-sm font-medium transition-colors duration-200
@@ -180,8 +184,7 @@ export default function UsersPageComponent() {
                     />
                   )}
                 </AnimatePresence>
-              </Button>              
-
+              </Button>
             );
           })}
         </div>
@@ -220,6 +223,12 @@ export default function UsersPageComponent() {
         onSave={handleSaveUser}
         onDelete={handleDeleteUser}
         glassBoxStyle={glassBoxStyle}
+        firstName={firstName}
+        setFirstName={setFirstName}
+        lastName={lastName}
+        setLastName={setLastName}
+        phoneNumber={phoneNumber}
+        setPhoneNumber={setPhoneNumber}
       />
     </div>
   );

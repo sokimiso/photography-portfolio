@@ -53,6 +53,16 @@ async createUser(createUserDto: CreateUserDto) {
   }
 
   /** ------------------------------
+   * UPDATE LAST LOGIN ON USER
+   * ----------------------------- */
+  async updateLastLogin(id: string) {
+    return this.prisma.user.update({
+      where: { id },
+      data: { lastLoginAt: new Date() },
+    });
+  }  
+
+  /** ------------------------------
    * FIND BY ID
    * ----------------------------- */
   async findById(id: string) {

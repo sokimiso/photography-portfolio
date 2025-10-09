@@ -1,13 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { CheckCircle, XCircle } from "lucide-react";
 import { UserResult } from "@/types/order.dto";
 import { useScrollLock } from "@/hooks/useScrollLock";
 import { Label } from "@/components/ui/Label";
 import { formatDate } from "@/utils/formatDate";
 import { useTexts } from "@/context/TextContext";
-import CustomSelect from "@/components/ui/CustomSelect";
-import { OrderResult } from "@/types/order.dto";
 import { useUserOrders } from "@/hooks/useUserOrders";
 
 interface UserEditorModalProps {
@@ -17,6 +16,7 @@ interface UserEditorModalProps {
   isCreating: boolean;
   isManageMode?: boolean;
   userForm: UserResult | null;
+
   searchQuery: string;
   setSearchQuery: (q: string) => void;
   searchResultsUsers: UserResult[];
@@ -27,28 +27,14 @@ interface UserEditorModalProps {
   onDelete?: (userId: string) => void;
   glassBoxStyle: string;
 
-  status: OrderResult["status"];
-  setStatus: (val: OrderResult["status"]) => void;
-
   firstName: string;
   setFirstName: (val: string) => void;
 
   lastName: string;
   setLastName: (val: string) => void;
 
-  email: string;
-  setEmail: (val: string) => void;
-
   phoneNumber: string;
-  setPhoneNumber: (val: string) => void;    
-
-
-
-  createdAt: string;
-
-
-  notes: string;
-  setNotes: (val: string) => void;      
+  setPhoneNumber: (val: string) => void;
 }
 
 export default function UserEditorModal(props: UserEditorModalProps) {
@@ -71,32 +57,38 @@ export default function UserEditorModal(props: UserEditorModalProps) {
     setFirstName,
     lastName,
     setLastName,
-    email,
-    setEmail,
     phoneNumber,
     setPhoneNumber,
   } = props;
 
-
-  const [role, setRole] = useState<UserResult["role"]>(userForm?.role || "CUSTOMER");
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deliveryAddress, setDeliveryAddress] = useState(userForm?.deliveryAddress || "");
-
   const [orderStatusFilter, setOrderStatusFilter] = useState<string>("");
-  // Reset to "CONFIRMED" whenever the modal opens
-  useEffect(() => {
-    if (isOpen) {
-      setOrderStatusFilter("CONFIRMED");
-    }
-  }, [isOpen]);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  const { orders, loading } = useUserOrders(selectedUser?.id, orderStatusFilter)
+  const [createdAt, setCreatedAt] = useState<string>("");
+  const [updatedAt, setUpdatedAt] = useState<string>("");
+  const [lastLoginAt, setLastLoginAt] = useState<string>("");
+
+  const { orders, loading } = useUserOrders(selectedUser?.id, orderStatusFilter);
   const isSearchMode = !userForm && !isCreating && !isManageMode;
   const texts = useTexts();
-  
+
   useScrollLock(isOpen);
 
-  if (!isOpen) return null;
+  // Initialize modal fields when opening or selecting a user
+  useEffect(() => {
+    if (isOpen && selectedUser) {
+      setFirstName(selectedUser.firstName || "");
+      setLastName(selectedUser.lastName || "");
+      setPhoneNumber(selectedUser.phoneNumber || "");
+      setDeliveryAddress(selectedUser.deliveryAddress || "");
+      setOrderStatusFilter("CONFIRMED");
+
+      setCreatedAt(selectedUser.createdAt || "");
+      setUpdatedAt(selectedUser.updatedAt || "");
+      setLastLoginAt(selectedUser.lastLoginAt || "");
+    }
+  }, [isOpen, selectedUser, setFirstName, setLastName, setPhoneNumber]);
 
   const modalTitle = isManageMode
     ? "Manage User"
@@ -110,20 +102,25 @@ export default function UserEditorModal(props: UserEditorModalProps) {
     setSearchQuery("");
     setFirstName("");
     setLastName("");
-    setEmail("");
     setPhoneNumber("");
-    setRole("CUSTOMER");
+    setDeliveryAddress("");
   };
 
   const handleSave = () => {
-    onSave({ firstName, lastName, email, phoneNumber, role });
+    onSave({
+      firstName,
+      lastName,
+      phoneNumber,
+      deliveryAddress,
+    });
   };
+
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 overflow-auto p-2">
       <div className="relative flex flex-col w-full max-w-[95%] xs:max-w-[90%] sm:max-w-[85%] md:max-w-[80%] lg:max-w-[50%] rounded bg-white/10 border border-white/20 text-amber-50 backdrop-blur-md shadow-xl">
-        {/* Modal Content */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-[800px]">
+        <div className={`flex-1 flex flex-col overflow-y-auto p-4 space-y-4 ${userForm ? "min-h-[750px]" : ""}`}>
           <h2 className="text-xl font-semibold mb-4">{modalTitle}</h2>
 
           {/* Search Mode */}
@@ -153,43 +150,58 @@ export default function UserEditorModal(props: UserEditorModalProps) {
             </div>
           )}
 
+          {/* User Form */}
           {userForm && (
             <>
-              {/* User Info */}
               <div className="text-xl font-semibold mb-4 flex justify-between items-center">
-                <div className="flex flex-col w-full">
-                    <h2 >{selectedUser?.firstName} {selectedUser?.lastName}</h2>
+                <div className="flex w-full justify-between">
+                  <div className="grid grid-cols-2 gap-2">
+                    <span>
+                      <Label>{texts.common?.name}</Label>
+                      <input type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} className={glassBoxStyle} />
+                    </span>
+                    <span>
+                      <Label>{texts.common?.lastName}</Label>
+                      <input type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} className={glassBoxStyle} />
+                    </span>
+                  </div>
                 </div>
                 <div className="flex w-full text-red-500 font-semibold ml-2">
-                    {selectedUser?.deletedAt   && (
-                      <span>
-                        DELETED at {formatDate(selectedUser.deletedAt )}
-                      </span>
-                    )}
+                  {selectedUser?.deletedAt && <span>DELETED at {formatDate(selectedUser.deletedAt)}</span>}
                 </div>
               </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 py-1">
-                    <div className="grid grid-cols-2 gap-2">
-                      <span>
-                        <Label>{texts.common?.email}</Label>
-                        <input value={userForm.email} readOnly className={glassBoxStyle} />
-                      </span>
-                      <span>
-                        <Label>{texts.common?.phone}</Label>
-                        <input value={userForm.phoneNumber} readOnly className={glassBoxStyle} />
-                      </span>
+
+              {/* Contact Info */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 py-1">
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="relative">
+                    <Label>{texts.common?.email}</Label>
+                    <div className="relative">
+                      <input value={userForm.email} readOnly className={`${glassBoxStyle} pr-8`} />
+                      {userForm.emailConfirmed ? (
+                        <CheckCircle className="absolute right-2 top-1/2 -translate-y-1/2 text-green-500" size={18} />
+                      ) : (
+                        <XCircle className="absolute right-2 top-1/2 -translate-y-1/2 text-red-500" size={18} />
+                      )}
+                    </div>
                   </div>
-                  <div className="flex flex-col">
-                    <Label>{texts.common?.address}</Label>
-                    <input type="text" value={deliveryAddress} onChange={(e) => setDeliveryAddress(e.target.value)} className={glassBoxStyle}  />
-                  </div>                  
+
+                  <div>
+                    <Label>{texts.common?.phone}</Label>
+                    <input value={phoneNumber} readOnly className={glassBoxStyle} />
+                  </div>
+                </div>
+
+                <div className="flex flex-col">
+                  <Label>{texts.common?.address}</Label>
+                  <input type="text" value={deliveryAddress} onChange={(e) => setDeliveryAddress(e.target.value)} className={glassBoxStyle} />
+                </div>
               </div>
 
-              {/* USER ORDERS SECTION */}
+              {/* User Orders Section */}
               <div className="mt-6">
                 <h3 className="font-semibold text-lg mb-2">{texts.dashboard?.ordersPage?.orders?.orders}</h3>
 
-                {/* Status Filter */}
                 <div className="flex gap-2 mb-3">
                   {["CONFIRMED", "PENDING", "COMPLETED", "CANCELLED", "ALL"].map((s) => (
                     <button
@@ -211,37 +223,33 @@ export default function UserEditorModal(props: UserEditorModalProps) {
                 ) : orders.length === 0 ? (
                   <div className="text-gray-400 text-sm">{texts.dashboard?.ordersPage?.orders?.noOrders}</div>
                 ) : (
-                  <div className="space-y-2 max-h-70 overflow-y-auto">
+                  <div className="space-y-2 max-h-75 overflow-y-auto">
                     {orders.map((order) => (
-                      <div
-                        key={order.id}
-                        className="flex justify-between p-2 rounded bg-white/10 border border-white/20 hover:bg-white/20 transition"
-                      >
+                      <div key={order.id} className="flex justify-between p-2 rounded bg-white/10 border border-white/20 hover:bg-white/20 transition">
                         <div>
                           <div className="font-medium">{order.readableOrderNumber}</div>
-                          <div className="text-sm text-gray-400">
-                            {order.status} 
-                          </div>
+                          <div className="text-sm text-gray-400">{order.status}</div>
                         </div>
                         <div className="font-semibold">{order.finalPrice} €</div>
                       </div>
                     ))}
                   </div>
                 )}
+
+                {/* Footer Info */}
+                <div className="sticky bottom-0 mt-4 space-y-1 p-1">
+                  <span className="block w-full text opacity-50 font-normal">Created: {createdAt ? formatDate(createdAt) : "-"}</span>
+                  <span className="block w-full text opacity-50 font-normal">Last updated: {updatedAt ? formatDate(updatedAt) : "-"}</span>
+                  <span className="block w-full text opacity-50 font-normal">User's last login: {lastLoginAt ? formatDate(lastLoginAt) : "-"}</span>
+                </div>
               </div>
-
-
-                <span className="block w-full text opacity-50 font-normal">Created at: {selectedUser?.createdAt ? formatDate(selectedUser.createdAt) : "-"}</span>
-                <span className="block w-full text opacity-50 font-normal">Info last updated: {selectedUser?.updatedAt ? formatDate(selectedUser.updatedAt) : "-"}</span>
-                <span className="block w-full text opacity-50 font-normal">User's last login: {selectedUser?.lastLoginAt ? formatDate(selectedUser.lastLoginAt) : "-"}</span>
             </>
           )}
         </div>
 
-        {/* Footer */}
+        {/* Footer Buttons */}
         <div className="sticky bottom-0 left-0 right-0 flex justify-end gap-2 p-4 border-t border-gray-200 dark:border-gray-700 bg-white/10 backdrop-blur-md">
           {isSearchMode ? (
-            // Search mode → only show cancel button
             <button
               onClick={() => {
                 onClose();
@@ -253,7 +261,6 @@ export default function UserEditorModal(props: UserEditorModalProps) {
             </button>
           ) : (
             <>
-              {/* Normal editing / creating buttons */}
               {!(isCreating && isManageMode) && (
                 <button onClick={handleSave} className="px-4 py-2 rounded main-ui-button">
                   {isCreating ? "Vytvoriť objednávku" : "Editovať"}
@@ -267,10 +274,7 @@ export default function UserEditorModal(props: UserEditorModalProps) {
                   Odstrániť
                 </button>
               )}
-              <button
-                onClick={onClose}
-                className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
-              >
+              <button onClick={onClose} className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600">
                 Zatvoriť
               </button>
             </>
