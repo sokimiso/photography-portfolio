@@ -10,6 +10,7 @@ import { DataTable } from "@/components/ui/DataTable";
 import { Button } from "@/components/ui/button";
 import { UserResult } from "@/types/order.dto";
 import UserEditorModal from "@/components/layout/UserEditorModal";
+import CreateUserModal from "@/components/layout/CreateUserModal"; // <-- import new modal
 
 const STATUS_TYPES = ["confirmed", "pending", "inactive", "deleted"] as const;
 
@@ -28,6 +29,8 @@ export default function UsersPageComponent() {
   const [selectedUser, setSelectedUser] = useState<UserResult | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isManageMode, setIsManageMode] = useState(false);
+
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false); // <-- new state for create modal
 
   const [searchQuery, setSearchQuery] = useState("");
   const { results, globalSearch, loading: loadingSearch, setResults } = useGlobalSearch(
@@ -127,6 +130,27 @@ export default function UsersPageComponent() {
     }
   };
 
+  const handleCreateUser = async (payload: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phoneNumber: string;
+    deliveryAddress: string;
+  }) => {
+    try {
+      await apiClient.post("/api/users", payload, { withCredentials: true });
+      toast({ title: "User created" });
+      setIsCreateModalOpen(false);
+      await fetchUsersByStatus();
+    } catch (err: any) {
+      toast({
+        title: "Error creating user",
+        description: err?.response?.data?.message || "Something went wrong",
+        variant: "destructive",
+      });
+    }
+  };
+
   const userColumns = [
     { key: "firstName", header: "First Name", render: (u: UserResult) => u.firstName || "-" },
     { key: "lastName", header: "Last Name", render: (u: UserResult) => u.lastName || "-" },
@@ -145,7 +169,10 @@ export default function UsersPageComponent() {
       <Breadcrumb path={["Dashboard", "Users"]} />
 
       <div className={`flex gap-4 ${glassBoxStyle} p-4`}>
-        <button onClick={() => openUserModal()} className="px-4 py-2 w-40 rounded main-ui-button">
+        <button
+          onClick={() => setIsCreateModalOpen(true)} // <-- open create user modal
+          className="px-4 py-2 w-40 rounded main-ui-button"
+        >
           Create New User
         </button>
         <button onClick={openManageModal} className="px-4 py-2 w-40 rounded main-ui-button">
@@ -208,6 +235,7 @@ export default function UsersPageComponent() {
         </AnimatePresence>
       </div>
 
+      {/* Existing user editor modal */}
       <UserEditorModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
@@ -229,6 +257,14 @@ export default function UsersPageComponent() {
         setLastName={setLastName}
         phoneNumber={phoneNumber}
         setPhoneNumber={setPhoneNumber}
+      />
+
+      {/* New create user modal */}
+      <CreateUserModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSave={handleCreateUser}
+        glassBoxStyle={glassBoxStyle}
       />
     </div>
   );

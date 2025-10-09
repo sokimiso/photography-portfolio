@@ -47,8 +47,8 @@ export default function DashboardSidebar() {
       badgeStatus: "CONFIRMED",
     },
     { href: "/dashboard/users", label: "Užívatelia", icon: Users },
-    { href: "/dashboard/manageweb", label: "Správa webu", icon: Settings },
     { href: "/dashboard/photos", label: "Fotky", icon: Image },
+    { href: "/dashboard/manageweb", label: "Správa webu", icon: Settings },
     {
       href: "/dashboard/notifications",
       label: "Notifikácie",
