@@ -34,6 +34,13 @@ export interface Texts {
       confirmedOrdersTitle: string;
       noOrdersMessage: string;
       orders?: {
+        order: string;
+        orders: string;
+        confirmed: string;
+        pending: string;
+        cancelled: string;
+        deleted: string;
+        noOrders: string;
         orderNumber: string;
         client: string;
         package: string;
@@ -84,6 +91,7 @@ export interface Texts {
     name: string;
     lastName: string;
     email: string;
+    address: string;
     phone: string;
     package: string;
   };
@@ -133,6 +141,13 @@ const defaultTexts: Texts = {
       confirmedOrdersTitle: "Potvrdené objednávky",
       noOrdersMessage: "Žiadne objednávky",
       orders: {
+        order: "Objednávka",
+        orders: "Objednávky",
+        confirmed: "Potvrdené",
+        pending: "Čakajúce",
+        cancelled: "Zrušené",
+        deleted: "Vymazané",
+        noOrders: "Žiadne objednávky",
         orderNumber: "Číslo obj.",
         client: "Zákazník",
         package: "Balík",
@@ -184,7 +199,8 @@ const defaultTexts: Texts = {
   common: {
     name: "Meno",
     lastName: "Priezvisko",
-    email: "email",
+    email: "Email",
+    address: "Adresa",
     phone: "Telefón",
     package: "Balíček",
   },  

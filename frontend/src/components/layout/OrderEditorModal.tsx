@@ -154,7 +154,7 @@ export default function OrderEditorModal(props: OrderEditorModalProps) {
 
   return (
   <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 overflow-hidden">
-    <div className="relative flex flex-col max-h-[90vh] sm:max-w-[95%] md:max-w-[85%] min-w-[50%] rounded-xl bg-white/10 border border-white/20 text-amber-50 backdrop-blur-md shadow-xl">
+    <div className="relative flex flex-col max-h-[90vh] sm:max-w-[95%] md:max-w-[85%] min-w-[50%] rounded bg-white/10 border border-white/20 text-amber-50 backdrop-blur-md shadow-xl">
     
       {/* User & Order Info */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">

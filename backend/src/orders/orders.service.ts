@@ -3,7 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { Order } from '@prisma/client';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
-import { UserRole } from '@prisma/client';
+import { OrderStatus } from "@prisma/client";
 
 @Injectable()
 export class OrdersService {
@@ -189,5 +189,41 @@ export class OrdersService {
     return completedOrders.filter(
       o => (o.amountPaid ?? 0) < (o.finalPrice ?? 0)
     );
+  }
+
+  // Find orders related to selected user (only for non-deleted users)
+  async findOrdersByUser(userId: string, status?: string) {
+    // Base filter
+    const where: any = {
+      userId, // always filter by userId
+      user: {
+        deletedAt: null, // only include orders for non-deleted users
+      },
+    };
+
+    // If status is provided
+    if (status) {
+      const normalized = status.toUpperCase() as
+        | 'PENDING'
+        | 'CONFIRMED'
+        | 'COMPLETED'
+        | 'CANCELLED';
+
+      if (['PENDING', 'CONFIRMED', 'COMPLETED', 'CANCELLED'].includes(normalized)) {
+        where.status = normalized;
+      }
+    }
+
+    return this.prisma.order.findMany({
+      where,
+      select: {
+        id: true,
+        readableOrderNumber: true,
+        status: true,
+        finalPrice: true,
+        createdAt: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
   }
 }

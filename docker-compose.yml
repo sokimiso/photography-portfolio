@@ -32,7 +32,7 @@ services:
     build: ./frontend
     container_name: portfolio_frontend
     environment:
-      NEXT_PUBLIC_API_URL: http://localhost:3000/api
+      NEXT_PUBLIC_API_URL: http://localhost:4000/api
     depends_on:
       - backend
     networks:

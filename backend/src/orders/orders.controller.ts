@@ -98,6 +98,14 @@ export class OrdersController {
     return this.ordersService.findOrdersByStatus(status as 'PENDING' | 'CONFIRMED');
   }
 
+  @Get('user/:userId')
+  async getOrdersByUser(
+    @Param('userId') userId: string,
+    @Query('status') status?: string,
+  ) {
+    return this.ordersService.findOrdersByUser(userId, status);
+  }  
+
   @Get('packages')
   async getPackages(): Promise<PackageResponseDto[]> {
     const packages = await this.ordersService.findAllPackages();

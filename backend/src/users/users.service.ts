@@ -138,7 +138,10 @@ async createUser(createUserDto: CreateUserDto) {
     }
 
     return this.prisma.user.findMany({
-      where,
+      where: {
+        ...where,
+        role: "CUSTOMER",
+      },
       select: {
         id: true,
         email: true,

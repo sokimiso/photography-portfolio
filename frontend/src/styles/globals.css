@@ -6,7 +6,7 @@
 :root {
   /* Backgrounds */
   --background: #F4F1DE;        /* main page background */
-  --foreground: #4b678d;        /* primary text */
+  --foreground: #2e2e2e;        /* primary text */
   --card-background: #2C2E43;   /* card/panel background */
   --primary: #e76f51;           /* main accent / buttons */
   --primary-light: #F2CC8F;     /* lighter accent */
@@ -23,7 +23,7 @@
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #264653;       /* main dark background */
-    --foreground: #F4F1DE;       /* text for dark bg */
+    --foreground: #d4dedf;       /* text for dark bg */
     --card-background: #2C2E43;  /* slightly darker panels */
     --primary: #ee6c4d;          /* accent remains same */
     --primary-light: #F2CC8F;

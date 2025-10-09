@@ -43,6 +43,9 @@ export interface UserResult {
   orders?: OrderResult[];
   createdAt?: string;
   deletedAt?: string | null;
+  lastLoginAt?: string | null;
+  updatedAt?: string | null;
+  passwordHash?: string;
 }
 
 export interface PhotoshootPackage {

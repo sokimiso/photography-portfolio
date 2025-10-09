@@ -219,6 +219,7 @@ export default function UsersPageComponent() {
         onUserSelect={setSelectedUser}
         onSave={handleSaveUser}
         onDelete={handleDeleteUser}
+        glassBoxStyle={glassBoxStyle}
       />
     </div>
   );
