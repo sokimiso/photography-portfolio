@@ -247,7 +247,7 @@ export default function OrderEditorModal(props: OrderEditorModalProps) {
                   </span>
                   <span>
                     <Label>Čas fotenia</Label>
-                    <input type="time" value=""  className={glassBoxStyle} />
+                    <input type="time"  />
                   </span>  
                 </div>                
 

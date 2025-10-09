@@ -4,6 +4,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import * as bcrypt from 'bcrypt';
 import { UserRole } from '@prisma/client';
+import { not } from 'rxjs/internal/util/not';
 
 @Injectable()
 export class UsersService {
@@ -82,6 +83,79 @@ async createUser(createUserDto: CreateUserDto) {
     });
   }
 
+  /** ------------------------------
+   * FIND ALL USERS
+   * ----------------------------- */
+  async findAll() {
+    const users = await this.prisma.user.findMany({
+      where: {
+        deletedAt: null,
+        role: {
+          not: 'ADMIN',  // filter out admin users
+        },
+      },
+      select: {          
+          id: true,
+          email: true,
+          emailConfirmed: true,
+          firstName: true,
+          lastName: true,
+          lastLoginAt: true,
+          phoneNumber: true,
+          deliveryAddress: true,
+          createdAt: true,
+          updatedAt: true,
+          deletedAt: true,
+        },
+    });
+    return { users };
+  }
+
+  /** ------------------------------
+   * FIND USERS BY STATUS
+   * ----------------------------- */
+  async findUsersByStatus(status: "pending" | "confirmed" | "inactive" | "deleted") {
+    const where: any = {};
+
+    switch (status) {
+      case "pending":
+        where.emailConfirmed = false;
+        where.deletedAt = null;
+        break;
+      case "confirmed":
+        where.emailConfirmed = true;
+        where.deletedAt = null;
+        break;
+      case "inactive":
+        where.deletedAt = null;
+        const oneYearAgo = new Date();
+        oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+        where.updatedAt = { lt: oneYearAgo }; // last updated more than 1 year ago
+        break;
+      case "deleted":
+        where.deletedAt = { not: null };
+        break;
+    }
+
+    return this.prisma.user.findMany({
+      where,
+      select: {
+        id: true,
+        email: true,
+        emailConfirmed: true,
+        firstName: true,
+        lastName: true,
+        phoneNumber: true,
+        deliveryAddress: true,
+        role: true,
+        createdAt: true,
+        updatedAt: true,
+        deletedAt: true,
+        lastLoginAt: true,
+      },
+      orderBy: { createdAt: "desc" },
+    });
+  }  
   /** ------------------------------
    * SEARCH USERS BY QUERY
    * ----------------------------- */

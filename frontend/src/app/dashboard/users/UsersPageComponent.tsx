@@ -1,151 +1,225 @@
-"use client";
-
 import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@context/AuthContext";
+import { useGlobalSearch } from "@hooks/useGlobalSearch";
+import { glassBoxStyle } from "@/lib/constants/orders";
+import apiClient from "@/lib/apiClient";
+import { useToast } from "@/components/ui/use-toast";
 import Breadcrumb from "../components/Breadcrumb";
+import { DataTable } from "@/components/ui/DataTable";
+import { Button } from "@/components/ui/button";
+import { UserResult } from "@/types/order.dto";
+import UserEditorModal from "@/components/layout/UserEditorModal";
 
-type UserRole = "CUSTOMER" | "ADMIN";
+const STATUS_TYPES = ["confirmed", "pending", "inactive", "deleted"] as const;
 
-export interface User {
-  id: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  phoneNumber: string;
-  deliveryAddress: string;
-  role: UserRole;
-  emailConfirmed: boolean;
-  orders?: string[];
-}
-
-interface UsersPageComponentProps {
-  selectedUser?: User | null;
-}
-
-export default function UsersPageComponent({ selectedUser: preSelectedUser }: UsersPageComponentProps) {
+export default function UsersPageComponent() {
   const { token } = useAuth();
-  const API_URL = process.env.NEXT_PUBLIC_API_URL;
+  const { toast } = useToast();
 
-  const [users, setUsers] = useState<User[]>([]);
-  const [selectedUser, setSelectedUser] = useState<User | null>(preSelectedUser || null);
-  const path = ["Dashboard", "Užívatelia"];
+  const [selectedStatus, setSelectedStatus] = useState<typeof STATUS_TYPES[number]>("confirmed");
 
+  // Store users by status
+  const [usersByStatus, setUsersByStatus] = useState<Record<string, UserResult[]>>({
+    pending: [],
+    confirmed: [],
+    inactive: [],
+    deleted: [],
+  });
+
+  const [selectedUser, setSelectedUser] = useState<UserResult | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isManageMode, setIsManageMode] = useState(false);
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const { results, globalSearch, loading: loadingSearch, setResults } = useGlobalSearch(
+    process.env.NEXT_PUBLIC_API_URL!
+  );
+
+  /** Fetch users by status */
+  const fetchUsersByStatus = async () => {
+    try {
+      const promises = STATUS_TYPES.map((status) =>
+        apiClient.get<UserResult[]>(`/api/users/status/${status}`, { withCredentials: true })
+      );
+
+      const responses = await Promise.all(promises);
+      const data = Object.fromEntries(
+        STATUS_TYPES.map((status, i) => [status, responses[i].data])
+      ) as Record<string, UserResult[]>;
+
+      setUsersByStatus(data);
+      console.log("Fetched users by status:", data.confirmed);
+    } catch (err: any) {
+      toast({
+        title: "Error loading users",
+        description: err?.response?.data?.message || "Try again later.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  /** Fetch on mount or token change */
   useEffect(() => {
-    if (preSelectedUser) setSelectedUser(preSelectedUser);
-  }, [preSelectedUser]);
+    fetchUsersByStatus();
+  }, [token]);
 
-  // You can add fetching users, search, and form submission here
+  /** Debounced search */
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      if (searchQuery.trim()) globalSearch(searchQuery);
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [searchQuery]);
+
+  /** Modal handlers */
+  const openUserModal = (user?: UserResult) => {
+    if (user) {
+      setSelectedUser(user);
+    } else {
+      setSelectedUser(null);
+      setSearchQuery("");
+      setResults({ users: [], orders: [] });
+    }
+    setIsModalOpen(true);
+  };
+
+  const openManageModal = () => {
+    setIsManageMode(true);
+    openUserModal();
+  };
+
+  const handleSaveUser = async (payload: Partial<UserResult>) => {
+    try {
+      if (selectedUser) {
+        await apiClient.put(`/api/users/${selectedUser.id}`, payload, { withCredentials: true });
+        toast({ title: "User updated" });
+      } else {
+        await apiClient.post("/api/users", payload, { withCredentials: true });
+        toast({ title: "User created" });
+      }
+      setIsModalOpen(false);
+      await fetchUsersByStatus();
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err?.response?.data?.message || "Something went wrong",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteUser = async (userId: string) => {
+    try {
+      await apiClient.delete(`/api/users/${userId}`, { withCredentials: true });
+      toast({ title: "User deleted" });
+      await fetchUsersByStatus();
+    } catch (err: any) {
+      toast({
+        title: "Error deleting user",
+        description: err?.response?.data?.message || "Something went wrong",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const userColumns = [
+    { key: "firstName", header: "First Name", render: (u: UserResult) => u.firstName || "-" },
+    { key: "lastName", header: "Last Name", render: (u: UserResult) => u.lastName || "-" },
+    { key: "email", header: "Email", render: (u: UserResult) => u.email || "-" },
+    { key: "phoneNumber", header: "Phone", render: (u: UserResult) => u.phoneNumber || "-" },
+    { key: "role", header: "Role", render: (u: UserResult) => u.role || "-" },
+    { key: "emailConfirmed", header: "Email Confirmed", render: (u: UserResult) => (u.emailConfirmed ? "Yes" : "No") },
+    { key: "createdAt", header: "Created At", render: (u: UserResult) => u.createdAt ? new Date(u.createdAt).toLocaleDateString() : "-" },
+    { key: "deletedAt", header: "Deleted At", render: (u: UserResult) => u.deletedAt ? new Date(u.deletedAt).toLocaleDateString() : "-" },
+  ];
+
+  const currentUsers = usersByStatus[selectedStatus] ?? [];
 
   return (
     <div className="space-y-6">
-      <div><Breadcrumb path={path} /></div>
-      
-      {/* Edit User Card */}
-      <div className="flex-1 p-6 rounded-xl shadow-lg bg-white/10 backdrop-blur-md border border-white/20">
-        <h2 className="text-lg font-bold mb-2">Editovať používateľa</h2>
+      <Breadcrumb path={["Dashboard", "Users"]} />
 
-        {/* User search */}
-        <div className="flex gap-2 mb-2">
-          <input
-            type="text"
-            placeholder="Hľadať používateľa"
-            className="flex-1 p-2 border rounded"
-          />
-          <button className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-            🔍
-          </button>
-        </div>
+      <div className={`flex gap-4 ${glassBoxStyle} p-4`}>
+        <button onClick={() => openUserModal()} className="px-4 py-2 w-40 rounded main-ui-button">
+          Create New User
+        </button>
+        <button onClick={openManageModal} className="px-4 py-2 w-40 rounded main-ui-button">
+          Manage User
+        </button>
+      </div>
 
-        {/* Users list */}
-        <div className="mb-2">
-          {users.map((u) => (
-            <div
-              key={u.id}
-              className="cursor-pointer p-1 hover:bg-gray-100"
-              onClick={() => setSelectedUser(u)}
-            >
-              {u.firstName} {u.lastName} ({u.email})
-            </div>
-          ))}
-        </div>
+      <div className={`p-4 ${glassBoxStyle}`}>
+        {/* Status buttons with counts */}
+        <div className="flex gap-4 mb-4">
+          {STATUS_TYPES.map((status) => {
+            const isActive = selectedStatus === status;
+            const count = usersByStatus[status]?.length ?? 0;
+            const label = `${status.charAt(0).toUpperCase() + status.slice(1)} (${count})`;
 
-        {/* Selected User Form */}
-        {selectedUser && (
-          <div className="mt-2 space-y-3">
-            <div>
-              <small className="block mb-1 text-gray-500">Meno</small>
-              <input
-                type="text"
-                value={selectedUser.firstName}
-                onChange={(e) =>
-                  setSelectedUser({ ...selectedUser, firstName: e.target.value })
-                }
-                className="w-full p-2 border rounded"
-              />
-            </div>
-
-            <div>
-              <small className="block mb-1 text-gray-500">Priezvisko</small>
-              <input
-                type="text"
-                value={selectedUser.lastName}
-                onChange={(e) =>
-                  setSelectedUser({ ...selectedUser, lastName: e.target.value })
-                }
-                className="w-full p-2 border rounded"
-              />
-            </div>
-
-            <div>
-              <small className="block mb-1 text-gray-500">Telefón</small>
-              <input
-                type="text"
-                value={selectedUser.phoneNumber}
-                onChange={(e) =>
-                  setSelectedUser({ ...selectedUser, phoneNumber: e.target.value })
-                }
-                className="w-full p-2 border rounded"
-              />
-            </div>
-
-            <div>
-              <small className="block mb-1 text-gray-500">Email</small>
-              <input
-                type="email"
-                value={selectedUser.email}
-                onChange={(e) =>
-                  setSelectedUser({ ...selectedUser, email: e.target.value })
-                }
-                className="w-full p-2 border rounded"
-              />
-            </div>
-
-            <div>
-              <small className="block mb-1 text-gray-500">Role</small>
-              <select
-                value={selectedUser.role}
-                onChange={(e) =>
-                  setSelectedUser({ ...selectedUser, role: e.target.value as UserRole })
-                }
-                className="w-full p-2 border rounded"
+            return (
+              <Button
+              key={status}  
+              variant="link"
+                onClick={() => setSelectedStatus(status as typeof selectedStatus)}
+                className={`
+                  relative px-3 py-1 text-sm font-medium transition-colors duration-200
+                  ${isActive ? "text-blue-600 dark:text-blue-400" : "text-gray-500 hover:text-blue-500"}
+                `}
               >
-                <option value="CUSTOMER">CUSTOMER</option>
-                <option value="ADMIN">ADMIN</option>
-              </select>
-            </div>
+                {label}
+                <AnimatePresence>
+                  {isActive && (
+                    <motion.div
+                      layoutId="active-underline"
+                      className="absolute left-0 bottom-0 w-full h-[2px] bg-blue-500 dark:bg-blue-400 rounded"
+                      transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                      initial={{ opacity: 0, y: 2 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 2 }}
+                    />
+                  )}
+                </AnimatePresence>
+              </Button>              
 
-            <button className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">
-              Uložiť zmeny
-            </button>
-          </div>
-        )}
+            );
+          })}
+        </div>
+
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={selectedStatus}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+          >
+            <DataTable
+              data={currentUsers}
+              columns={userColumns}
+              onRowClick={openUserModal}
+              loading={false}
+              emptyMessage={`No ${selectedStatus} users.`}
+            />
+          </motion.div>
+        </AnimatePresence>
       </div>
 
-      {/* Add User Card */}
-      <div className="flex-1 p-6 rounded-xl shadow-lg bg-white/10 backdrop-blur-md border border-white/20">
-        <h2 className="text-lg font-bold mb-2">Pridať používateľa</h2>
-        {/* Form for creating new user */}
-      </div>
+      <UserEditorModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        isManageMode={isManageMode}
+        isCreating={!selectedUser && !isManageMode}
+        selectedUser={selectedUser}
+        userForm={selectedUser}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        searchResultsUsers={results.users}
+        loadingSearch={loadingSearch}
+        onUserSelect={setSelectedUser}
+        onSave={handleSaveUser}
+        onDelete={handleDeleteUser}
+      />
     </div>
   );
 }

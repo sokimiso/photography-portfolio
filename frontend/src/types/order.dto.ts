@@ -41,6 +41,8 @@ export interface UserResult {
   role: "CUSTOMER" | "ADMIN";
   emailConfirmed: boolean;
   orders?: OrderResult[];
+  createdAt?: string;
+  deletedAt?: string | null;
 }
 
 export interface PhotoshootPackage {

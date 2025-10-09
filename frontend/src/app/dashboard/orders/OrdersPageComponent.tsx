@@ -270,8 +270,26 @@ export default function OrdersPageComponent() {
          
 <div className="overflow-x-auto mb-4">
   <div className="flex gap-2 min-w-max relative px-1">
-    {["PENDING", "CONFIRMED", "COMPLETED", "CANCELLED"].map((status) => {
+    {["CONFIRMED", "PENDING", "COMPLETED", "CANCELLED"].map((status) => {
       const isActive = selectedStatus === status;
+
+      // Get count for the status
+      let count = 0;
+      switch (status) {
+        case "CONFIRMED":
+          count = confirmedOrders.length;
+          break;
+        case "PENDING":
+          count = pendingOrders.length;
+          break;
+        case "COMPLETED":
+          count = completedOrders.length;
+          break;
+        case "CANCELLED":
+          count = cancelledOrders.length;
+          break;
+      }
+
       return (
         <div key={status} className="relative flex-shrink-0">
           <Button
@@ -282,7 +300,7 @@ export default function OrdersPageComponent() {
               ${isActive ? "text-blue-600 dark:text-blue-400" : "text-gray-500 hover:text-blue-500"}
             `}
           >
-            {status.toLowerCase().replace(/^\w/, (c) => c.toUpperCase())} Orders
+            {status.toLowerCase().replace(/^\w/, (c) => c.toUpperCase())} Orders ({count})
             <AnimatePresence>
               {isActive && (
                 <motion.div

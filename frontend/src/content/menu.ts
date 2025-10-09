@@ -26,7 +26,8 @@ export const createMenuItems = (texts: Texts): MenuItem[] => {
         { label: texts.menu.servicesSub.weddings, href: "/services/weddings" },
       ],
     },
-    { label: texts.menu.reservation, href: "/order" },
+    { label: texts.menu.reservation,
+    },
     {
       label: texts.menu.gallery,
       subItems: [

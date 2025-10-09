@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { useTexts } from "@context/TextContext";
 
-export default function AboutMeSection() {
+export default function ReservationSection() {
   const texts = useTexts();
   return (
     <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
@@ -15,10 +15,10 @@ export default function AboutMeSection() {
         className="text-center"
       >
         <h2 className="text-3xl sm:text-4xl font-heading font-bold mb-4">
-          O mne
+          Reservation
         </h2>
         <p className="text-lg sm:text-xl text-foreground/80 max-w-3xl mx-auto">
-          {texts.about?.description}
+          Placeholder
         </p>
       </motion.div>
     </section>

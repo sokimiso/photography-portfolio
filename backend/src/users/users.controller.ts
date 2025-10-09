@@ -13,6 +13,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
+@UseGuards(JwtAuthGuard) // Apply guard to all routes by default
 @Controller('api/users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
@@ -20,45 +21,53 @@ export class UsersController {
   /** ------------------------------
    * CREATE USER
    * ----------------------------- */
-  @UseGuards(JwtAuthGuard)
   @Post()
-  async create(@Body() createUserDto: CreateUserDto) {
-    try {
-      const user = await this.usersService.createUser(createUserDto);
-      return { user };
-    } catch (error) {
-      console.error('Error creating user:', error);
-      throw error; // rethrow to see 500 in Postman
-    }
+  async createUser(@Body() createUserDto: CreateUserDto) {
+    const user = await this.usersService.createUser(createUserDto);
+    return { user };
   }
 
   /** ------------------------------
    * UPDATE USER
    * ----------------------------- */
-  @UseGuards(JwtAuthGuard)
   @Put(':id')
-  async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
+  async updateUser(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
     const user = await this.usersService.updateUser(id, updateUserDto);
+    return { user };
+  }
+
+  /** ------------------------------
+   * GET ALL USERS
+   * ----------------------------- */
+  @Get()
+  async getAllUsers() {
+    const users = await this.usersService.findAll();
+    return { users };
+  }
+
+  /** ------------------------------
+   * GET USER BY ID
+   * ----------------------------- */
+  @Get(':id')
+  async getUserById(@Param('id') id: string) {
+    const user = await this.usersService.findById(id);
     return { user };
   }
 
   /** ------------------------------
    * SEARCH USERS
    * ----------------------------- */
-  @UseGuards(JwtAuthGuard)
   @Get('search')
-  async search(@Query('query') query: string) {
-    console.log('Query received in controller:', query);
-    return this.usersService.searchUsers(query); // returns array
+  async searchUsers(@Query('query') query: string) {
+    const users = await this.usersService.searchUsers(query);
+    return { users };
   }
 
   /** ------------------------------
-   * GET USER BY ID
+   * GET USERS BY STATUS
    * ----------------------------- */
-  @UseGuards(JwtAuthGuard)
-  @Get(':id')
-  async findOne(@Param('id') id: string) {
-    const user = await this.usersService.findById(id);
-    return { user };
+  @Get('status/:status')
+  async getUsersByStatus(@Param('status') status: 'pending' | 'confirmed' | 'inactive' | 'deleted') {
+    return this.usersService.findUsersByStatus(status);
   }
 }
