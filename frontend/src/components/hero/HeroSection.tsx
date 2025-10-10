@@ -85,10 +85,12 @@ export default function HeroSection() {
             {texts.homepage?.heroSubtitle}
           </p>
           <motion.a
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            href="/rezervacia"
-            className="inline-block mt-6 px-6 py-3 rounded-lg bg-primary bg-white/60 dark:bg-gray-900/60 text-card-background font-medium shadow-lg hover:bg-primary-light transition-colors"
+            onClick={(e) => {
+              e.preventDefault();
+              const reservationSection = document.getElementById("reservation-section");
+              reservationSection?.scrollIntoView({ behavior: "smooth" });
+            }}
+            className="inline-block mt-6 px-6 py-3 rounded-lg bg-primary bg-white/60 dark:bg-gray-900/60 text-card-background font-medium shadow-lg hover:bg-primary-light transition-colors cursor-pointer"
           >
             {texts.homepage?.cta}
           </motion.a>

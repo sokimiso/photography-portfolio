@@ -117,8 +117,6 @@ async createUser(createUserDto: CreateUserDto) {
     await this.mailService.sendPasswordReset(user.email, resetToken);
   }
 
-
-
   /** ------------------------------
    * UPDATE USER
    * ----------------------------- */
@@ -176,6 +174,22 @@ async createUser(createUserDto: CreateUserDto) {
       where: { email },
     });
   }
+
+
+  /** ------------------------------
+   * CHECK IF USER EXISTS BY EMAIL
+   * ----------------------------- */
+  async checkIfUserExists(email: string) {
+    if (!email) throw new Error('Email is required');
+
+    const user = await this.prisma.user.findUnique({
+      where: { email },
+      select: { id: true, email: true },
+    });
+
+    return { exists: !!user };
+  }
+  
 
   /** ------------------------------
    * FIND ALL USERS

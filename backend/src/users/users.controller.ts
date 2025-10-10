@@ -35,6 +35,17 @@ export class UsersController {
     }
   }
 
+  @Public()
+  @Get('exists')
+  async checkIfUserExists(@Query('email') email: string) {
+    if (!email) {
+      throw new BadRequestException('Email query parameter is required');
+    }
+
+    const result = await this.usersService.checkIfUserExists(email);
+    return result; // { exists: true/false }
+  }  
+
   /** ------------------------------
    * CREATE USER
    * ----------------------------- */
@@ -66,16 +77,6 @@ export class UsersController {
   }
 
   /** ------------------------------
-   * GET USER BY ID
-   * ----------------------------- */
-  @UseGuards(JwtAuthGuard)
-  @Get(':id')
-  async getUserById(@Param('id') id: string) {
-    const user = await this.usersService.findById(id);
-    return { user };
-  }
-
-  /** ------------------------------
    * SEARCH USERS
    * ----------------------------- */
   @UseGuards(JwtAuthGuard)
@@ -84,6 +85,16 @@ export class UsersController {
     const users = await this.usersService.searchUsers(query);
     return { users };
   }
+
+  /** ------------------------------
+   * GET USER BY ID
+   * ----------------------------- */
+  @UseGuards(JwtAuthGuard)
+  @Get(':id')
+  async getUserById(@Param('id') id: string) {
+    const user = await this.usersService.findById(id);
+    return { user };
+  }  
 
   /** ------------------------------
    * GET USERS BY STATUS

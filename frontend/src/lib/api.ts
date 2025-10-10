@@ -38,3 +38,11 @@ export async function fetchMenuTexts() {
   const res = await fetch("/api/texts/menu");
   return res.json();
 }
+
+export const checkUserExists = async (email: string) => {
+  const res = await apiClient.get(`/api/users/exists`, {
+    params: { email },
+    withCredentials: true, // keep consistent with your setup
+  });
+  return res.data; // { exists: true/false }
+};
