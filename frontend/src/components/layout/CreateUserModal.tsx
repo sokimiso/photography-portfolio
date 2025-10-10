@@ -1,8 +1,6 @@
-"use client";
-
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Label } from "@/components/ui/Label";
-import { useTexts } from "@/context/TextContext";
+import { Button } from "@/components/ui/button";
 
 interface CreateUserModalProps {
   isOpen: boolean;
@@ -13,6 +11,7 @@ interface CreateUserModalProps {
     email: string;
     phoneNumber: string;
     deliveryAddress: string;
+    sendConfirmationEmail?: boolean;
   }) => void;
   glassBoxStyle: string;
 }
@@ -23,69 +22,59 @@ export default function CreateUserModal({ isOpen, onClose, onSave, glassBoxStyle
   const [email, setEmail] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [deliveryAddress, setDeliveryAddress] = useState("");
+  const [sendConfirmationEmail, setSendConfirmationEmail] = useState(true); // default checked
 
-  const texts = useTexts();
+  if (!isOpen) return null;
 
-  const resetAllFields = () => {
+  const handleSave = () => {
+    onSave({ firstName, lastName, email, phoneNumber, deliveryAddress, sendConfirmationEmail });
+  };
+
+  const handleCancel = () => {
     setFirstName("");
     setLastName("");
     setEmail("");
     setPhoneNumber("");
     setDeliveryAddress("");
-  };
-
-  const handleSave = () => {
-    onSave({ firstName, lastName, email, phoneNumber, deliveryAddress });
-    resetAllFields();
+    setSendConfirmationEmail(true);
     onClose();
   };
-
-  const handleCancel = () => {
-    resetAllFields();
-    onClose();
-  };
-
-  if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 overflow-auto p-2">
-      <div className="relative flex flex-col w-full max-w-[95%] sm:max-w-[80%] md:max-w-[50%] rounded bg-white/10 border border-white/20 text-amber-50 backdrop-blur-md shadow-xl p-6 space-y-4">
-        <h2 className="text-xl font-semibold mb-4">Vytvoriť nového používateľa</h2>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 p-2">
+      <div className={`relative w-full max-w-md p-6 space-y-4 rounded bg-white/10 border border-white/20 text-amber-50 backdrop-blur-md`}>
+        <h2 className="text-xl font-semibold">Create New User</h2>
 
-        <div className="grid gap-3">
-          <div>
-            <Label>{texts.common?.name}</Label>
-            <input type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} className={glassBoxStyle} />
-          </div>
+        <div className="space-y-2">
+          <Label>First Name</Label>
+          <input value={firstName} onChange={(e) => setFirstName(e.target.value)} className={glassBoxStyle} />
 
-          <div>
-            <Label>{texts.common?.lastName}</Label>
-            <input type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} className={glassBoxStyle} />
-          </div>
+          <Label>Last Name</Label>
+          <input value={lastName} onChange={(e) => setLastName(e.target.value)} className={glassBoxStyle} />
 
-          <div>
-            <Label>{texts.common?.email}</Label>
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={glassBoxStyle} />
-          </div>
+          <Label>Email</Label>
+          <input value={email} onChange={(e) => setEmail(e.target.value)} className={glassBoxStyle} />
 
-          <div>
-            <Label>{texts.common?.phone}</Label>
-            <input type="text" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} className={glassBoxStyle} />
-          </div>
+          <Label>Phone</Label>
+          <input value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} className={glassBoxStyle} />
 
-          <div>
-            <Label>{texts.common?.address}</Label>
-            <input type="text" value={deliveryAddress} onChange={(e) => setDeliveryAddress(e.target.value)} className={glassBoxStyle} />
+          <Label>Address</Label>
+          <input value={deliveryAddress} onChange={(e) => setDeliveryAddress(e.target.value)} className={glassBoxStyle} />
+
+          <div className="flex items-center gap-2 mt-2">
+            <input
+              type="checkbox"
+              checked={sendConfirmationEmail}
+              onChange={(e) => setSendConfirmationEmail(e.target.checked)}
+              id="sendConfirmationEmail"
+            />
+            <label htmlFor="sendConfirmationEmail" className="text-sm">Send confirmation email</label>
           </div>
         </div>
 
         <div className="flex justify-end gap-2 mt-4">
-          <button onClick={handleCancel} className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600">
-            Cancel
-          </button>
-          <button onClick={handleSave} className="px-4 py-2 rounded main-ui-button">
-            Save
-          </button>
+          <Button onClick={handleCancel} variant="secondary">Cancel</Button>
+          <Button onClick={handleSave}>Save</Button>
         </div>
       </div>
     </div>

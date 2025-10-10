@@ -52,6 +52,10 @@ model User {
   deliveryAddress Json?    // flexible: JSON or normalize into separate fields
   role            UserRole @default(CUSTOMER)
   emailConfirmed  Boolean  @default(false)
+  emailConfirmationToken       String?
+  emailConfirmationTokenExpiresAt DateTime?
+  passwordResetToken	String?
+  passwordResetTokenExpiresAt	DateTime?
   lastLoginAt     DateTime?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
