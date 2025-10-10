@@ -40,7 +40,7 @@ export default function ManageWebComponent() {
     formData.append("categories", categories);
     formData.append("tags", tags);
 
-    await uploadPhoto(token!, formData);
+    await uploadPhoto(formData);
     setSelectedFile(null);
     setTitle("");
     setUploading(false);
@@ -48,12 +48,12 @@ export default function ManageWebComponent() {
   };
 
   const handleToggleVisibility = async (id: string, current: boolean) => {
-    await togglePhotoVisibility(token!, id, !current);
+    await togglePhotoVisibility(id, !current);
     await loadPhotos();
   };
 
   const handleDelete = async (id: string) => {
-    await deletePhoto(token!, id);
+    await deletePhoto(id);
     await loadPhotos();
   };
 
