@@ -21,7 +21,7 @@ export default function GalleryPreview() {
 
       <div className="flex flex-wrap justify-center gap-2 w-full h-[300px] overflow-hidden">
         {images.map((src, index) => (
-          <motion.div
+          <div
             key={index}
             className="
               flex-grow 
@@ -33,15 +33,16 @@ export default function GalleryPreview() {
               overflow-hidden 
               rounded-lg
             "
-            whileHover={{ scale: 1.05 }}
-            transition={{ duration: 0.25 }}
           >
-            <img
+            {/* Only zoom-in on hover */}
+            <motion.img
               src={src}
               alt={`Gallery image ${index + 1}`}
               className="w-full h-full object-cover"
+              whileHover={{ scale: 1.05 }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
             />
-          </motion.div>
+          </div>
         ))}
       </div>
     </section>
