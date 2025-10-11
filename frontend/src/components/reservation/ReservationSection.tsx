@@ -188,24 +188,24 @@ export default function ReservationSection() {
             transition={{ duration: 0.6 }}
             className="text-2xl font-bold mb-2"
           >
-            Get in Touch
+            Kontaktujte ma
           </motion.h3>
 
           <p className="text-foreground/80 max-w-sm">
-            Have questions before booking your photoshoot? Reach out via any of the methods below — we’ll get back to you quickly.
+            Máte akékoľvek otázky pred tým, ako si rezervujete termín? Kontaktujte ma na uvedenom čísle alebo napíšte správu cez email — odpoviem najrýchlejšie ako viem.
           </p>
 
           <div className="space-y-3 text-foreground/90">
             <motion.div whileHover={{ scale: 1.05 }} transition={{ type: "spring", stiffness: 200 }} className="flex items-center gap-3 justify-center hover:drop-shadow-lg">
               <Mail className="w-5 h-5 text-primary transition-all duration-300 hover:text-primary/80" />
-              <a href="mailto:info@nonexistentdomainxl.com" className="hover:underline">
-                info@nonexistentdomainxl.com
+              <a href="mailto:[ pripravuje sa ]" className="hover:underline">
+                [ pripravuje sa ]
               </a>
             </motion.div>
             <motion.div whileHover={{ scale: 1.05 }} transition={{ type: "spring", stiffness: 200 }} className="flex items-center gap-3 justify-center hover:drop-shadow-lg">
               <Phone className="w-5 h-5 text-primary transition-all duration-300 hover:text-primary/80" />
               <a href="tel:+421900123456" className="hover:underline">
-                +421 900 123 456
+                [ pripravuje sa ]
               </a>
             </motion.div>
             <motion.div whileHover={{ scale: 1.05 }} transition={{ type: "spring", stiffness: 200 }} className="flex items-center gap-3 justify-center hover:drop-shadow-lg">
@@ -215,14 +215,14 @@ export default function ReservationSection() {
           </div>
 
           <p className="text-sm text-foreground/60 italic mt-4">
-            “Photography is the story I fail to put into words.”
+            “Fotografia je príbeh, ktorý sa ťazko opisuje slovami.”
           </p>
         </div>
 
         {/* Calendar */}
         <div className="flex flex-col justify-center items-center px-6 h-full">
           <h3 className="text-2xl font-bold mb-4 text-center">
-            Pick Your Preferred Date
+            Vyberte si dátum fotenia
           </h3>
           <div className="relative w-full flex justify-center">
             <div style={{ minHeight: "360px" }}>
@@ -248,7 +248,7 @@ export default function ReservationSection() {
           <div className="grid grid-cols-2 gap-3">
             <div className="relative">
               <Input
-                placeholder="First Name *"
+                placeholder="Meno *"
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
                 onBlur={() => setTouched(prev => ({ ...prev, firstName: true }))}
@@ -261,7 +261,7 @@ export default function ReservationSection() {
 
             <div className="relative">
               <Input
-                placeholder="Last Name *"
+                placeholder="Priezvisko *"
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
                 onBlur={() => setTouched(prev => ({ ...prev, lastName: true }))}
@@ -290,7 +290,7 @@ export default function ReservationSection() {
           <div className="relative">
             <Input
               type="tel"
-              placeholder="Phone Number *"
+              placeholder="Telefónne číslo *"
               value={phoneNumber}
               onChange={(e) => setPhoneNumber(e.target.value)}
               onBlur={() => setTouched(prev => ({ ...prev, phoneNumber: true }))}
@@ -304,7 +304,7 @@ export default function ReservationSection() {
           <Input
             type="text"
             readOnly
-            placeholder="Select a date"
+            placeholder="Zvoľte dátum v kalendári"
             value={selectedDate ? selectedDate.toLocaleDateString("sk-SK") : ""}
             className="bg-white/90 dark:bg-gray-800/90 cursor-not-allowed"
           />
@@ -323,7 +323,7 @@ export default function ReservationSection() {
           </Select>
 
           <Textarea
-            placeholder="Message (optional)"
+            placeholder="Zanechajte správu"
             rows={4}
             value={message}
             onChange={(e) => setMessage(e.target.value)}
@@ -350,7 +350,7 @@ export default function ReservationSection() {
                 : ""
             }`}
           >
-            {loading ? "Sending..." : "Send Reservation Request"}
+            {loading ? "Posielam..." : "Odoslať požiadavku"}
           </Button>
         </form>
       </motion.div>
