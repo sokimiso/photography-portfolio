@@ -1,10 +1,12 @@
 "use client";
 
-import ConfirmEmailPageComponent from "./ConfirmEmailPageComponent";
+import { Suspense } from "react";
+import ConfirmEmailClient from "./ConfirmEmailPageComponent";
 
 export default function ConfirmEmailPage() {
-
   return (
-      <ConfirmEmailPageComponent />
+    <Suspense fallback={<div>Loading...</div>}>
+      <ConfirmEmailClient />
+    </Suspense>
   );
 }
