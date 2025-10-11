@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import apiClient from "@/lib/apiClient";
 
-export default function ConfirmEmailPage() {
+export default function ConfirmEmailClient() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const token = searchParams.get("token");
@@ -24,8 +24,7 @@ export default function ConfirmEmailPage() {
         await apiClient.get(`/api/users/confirm-email?token=${token}`);
         setStatus("success");
         setMessage("E-mail bol úspešne potvrdený! Môžete sa prihlásiť.");
-        // Optional: Redirect after 3 seconds
-        setTimeout(() => router.push("/login"), 30000);
+        setTimeout(() => router.push("/login"), 3000);
       } catch (err: any) {
         setStatus("error");
         setMessage(
