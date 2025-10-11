@@ -11,9 +11,10 @@ type Props = {
   activeTab: string;
   selectedUser: UserResult | null;
   selectedOrder: OrderResult | null;
+  role: "ADMIN" | "CUSTOMER" | null;
 };
 
-export default function DashboardContent({ activeTab, selectedUser, selectedOrder }: Props) {
+export default function DashboardContent({ activeTab, selectedUser, selectedOrder, role }: Props) {
   if (selectedOrder) return <OrdersPage selectedOrder={selectedOrder} />;
 
   if (selectedUser) {

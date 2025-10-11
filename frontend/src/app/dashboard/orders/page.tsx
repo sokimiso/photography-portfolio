@@ -1,12 +1,12 @@
 "use client";
 
+import AdminGuard from "@/components/auth/AdminGuard";
 import OrdersPageComponent from "./OrdersPageComponent";
-import { OrderResult } from "@hooks/useGlobalSearch";
 
-interface OrdersPageProps {
-  selectedOrder?: OrderResult | null;
-}
-
-export default function OrdersPage({ selectedOrder }: OrdersPageProps) {
-  return <OrdersPageComponent selectedOrder={selectedOrder} />;
+export default function OrdersPage() {
+  return (
+    <AdminGuard>
+    <OrdersPageComponent/>
+    </AdminGuard>
+  );
 }

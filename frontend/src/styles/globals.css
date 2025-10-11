@@ -94,6 +94,12 @@ a:hover {
   --font-mono: var(--font-geist-mono);
 }
 
+/* Hide scrollbar visually, but keep scrolling enabled */
 html {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE 10+ */
   scroll-behavior: smooth;
+}
+html::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Edge */
 }

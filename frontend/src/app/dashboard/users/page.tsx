@@ -1,12 +1,12 @@
 "use client";
 
+import AdminGuard from "@/components/auth/AdminGuard";
 import UsersPageComponent from "./UsersPageComponent";
-import type { User } from "./UsersPageComponent";
 
-interface UsersPageProps {
-  selectedUser?: User;
-}
-
-export default function UsersPage({ selectedUser }: UsersPageProps) {
-  return <UsersPageComponent selectedUser={selectedUser} />;
+export default function UsersPage() {
+  return (
+    <AdminGuard>
+    <UsersPageComponent />
+    </AdminGuard>
+  );
 }

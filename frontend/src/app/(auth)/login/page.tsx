@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useAuth } from "@context/AuthContext";
 
 export default function LoginPage() {
-  const { login } = useAuth();
+  const { login, loading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -14,12 +14,19 @@ export default function LoginPage() {
     setError("");
 
     try {
-      await login(email, password); // AuthProvider handles API call, cookies, and state
+      await login(email, password); // AuthContext handles role redirect
     } catch (err: any) {
-      console.error(err);
       setError(err?.response?.data?.message || "Login failed");
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen text-gray-500">
+        Checking session...
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">

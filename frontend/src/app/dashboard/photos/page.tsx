@@ -1,7 +1,12 @@
 "use client";
 
+import AdminGuard from "@/components/auth/AdminGuard";
 import PhotosPageComponent from "./PhotosPageComponent";
 
 export default function PhotosPage() {
-  return <PhotosPageComponent />;
+  return (
+    <AdminGuard>
+    <PhotosPageComponent />
+    </AdminGuard>
+    );
 }
