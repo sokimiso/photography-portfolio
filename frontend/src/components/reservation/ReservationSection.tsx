@@ -243,7 +243,7 @@ export default function ReservationSection() {
 
         {/* Reservation Form */}
         <form onSubmit={handleSubmit} className="flex flex-col justify-center space-y-4 max-w-lg mx-auto w-full px-6 h-full">
-          <h3 className="text-2xl font-bold mb-4 text-center">Reservation Form</h3>
+          <h3 className="text-2xl font-bold mb-4 text-center">Rezervácia termínu</h3>
 
           <div className="grid grid-cols-2 gap-3">
             <div className="relative">
