@@ -7,18 +7,18 @@ async function bootstrap() {
 
   app.use(cookieParser());
 
+  // Use environment variable for frontend origin
+  const allowedOrigins = [
+    process.env.FRONTEND_URL || 'http://localhost:3000',
+    'https://sokirka.com',
+    'https://www.sokirka.com', // <-- add www
+  ];
+
   app.enableCors({
-    origin: [
-      'http://localhost:3000',
-      'https://sokirka.home',
-      'https://sokirka.com',
-    ],
+    origin: allowedOrigins,
     credentials: true,
   });
 
-  //app.setGlobalPrefix('api');
-
   await app.listen(4000);
-
 }
 bootstrap();
