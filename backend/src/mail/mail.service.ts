@@ -13,7 +13,7 @@ export class MailService {
     try {
       await this.mailerService.sendMail({
         to: email,
-        subject: 'Confirm your email address',
+        subject: 'Potvrďte svoj email',
         template: './confirm-email',
         context: {
           confirmUrl,
@@ -37,8 +37,10 @@ export class MailService {
       });
       this.logger.log(`Password reset email sent to ${email}`);
     } catch (error) {
-      this.logger.error(`Failed to send password reset email to ${email}`, error.stack);
+      this.logger.error(
+        `Failed to send password reset email to ${email}`,
+        error.stack,
+      );
     }
   }
-
 }

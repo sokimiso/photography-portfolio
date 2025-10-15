@@ -67,6 +67,7 @@ export class UsersService {
 
       // Send confirmation email
       await this.mailService.sendEmailConfirmation(newUser.email, emailToken);
+
       return newUser;
     } catch (err: any) {
       throw err;
