@@ -1,4 +1,12 @@
-import { Body, Controller, Post, Res, Get, Req, UnauthorizedException } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Post,
+  Res,
+  Get,
+  Req,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from '../users/dto/login.dto';
 import { Response, Request } from 'express';
@@ -8,9 +16,12 @@ import { Public } from '../auth/decorators/public.decorator';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Public() 
+  @Public()
   @Post('login')
-  async login(@Body() loginDto: LoginDto, @Res({ passthrough: true }) res: Response) {
+  async login(
+    @Body() loginDto: LoginDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     const { token, role, email, id } = await this.authService.login(loginDto);
 
     // Set HTTP-only cookie

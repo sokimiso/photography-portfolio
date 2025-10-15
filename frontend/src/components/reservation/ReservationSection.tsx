@@ -172,13 +172,16 @@ export default function ReservationSection() {
   };
 
   return (
-    <section id="reservation-section" className="py-20 px-4 sm:px-6 lg:px-8 w-full mx-auto">
+    <section
+      id="reservation-section"
+      className="py-20 px-4 sm:px-6 lg:px-8 w-full mx-auto"
+    >
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ duration: 0.6 }}
-        className="grid md:grid-cols-3 gap-6 bg-white/5 dark:bg-gray-900/50 backdrop-blur-md p-10 rounded-2xl shadow-lg relative overflow-hidden items-stretch"
+        className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 bg-white/5 dark:bg-gray-900/50 backdrop-blur-md p-10 rounded-2xl shadow-lg relative overflow-hidden items-stretch"
       >
         {/* Contact Section */}
         <div className="flex flex-col justify-center items-center text-center space-y-6 p-6 h-full">
@@ -192,23 +195,37 @@ export default function ReservationSection() {
           </motion.h3>
 
           <p className="text-foreground/80 max-w-sm">
-            Máte akékoľvek otázky pred tým, ako si rezervujete termín? Kontaktujte ma na uvedenom čísle alebo napíšte správu cez email — odpoviem najrýchlejšie ako viem.
+            Máte akékoľvek otázky pred tým, ako si rezervujete termín?
+            Kontaktujte ma na uvedenom čísle alebo napíšte správu cez email —
+            odpoviem najrýchlejšie ako viem.
           </p>
 
           <div className="space-y-3 text-foreground/90">
-            <motion.div whileHover={{ scale: 1.05 }} transition={{ type: "spring", stiffness: 200 }} className="flex items-center gap-3 justify-center hover:drop-shadow-lg">
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              transition={{ type: "spring", stiffness: 200 }}
+              className="flex items-center gap-3 justify-center hover:drop-shadow-lg"
+            >
               <Mail className="w-5 h-5 text-primary transition-all duration-300 hover:text-primary/80" />
               <a href="mailto:[ pripravuje sa ]" className="hover:underline">
                 [ pripravuje sa ]
               </a>
             </motion.div>
-            <motion.div whileHover={{ scale: 1.05 }} transition={{ type: "spring", stiffness: 200 }} className="flex items-center gap-3 justify-center hover:drop-shadow-lg">
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              transition={{ type: "spring", stiffness: 200 }}
+              className="flex items-center gap-3 justify-center hover:drop-shadow-lg"
+            >
               <Phone className="w-5 h-5 text-primary transition-all duration-300 hover:text-primary/80" />
               <a href="tel:+421900123456" className="hover:underline">
                 [ pripravuje sa ]
               </a>
             </motion.div>
-            <motion.div whileHover={{ scale: 1.05 }} transition={{ type: "spring", stiffness: 200 }} className="flex items-center gap-3 justify-center hover:drop-shadow-lg">
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              transition={{ type: "spring", stiffness: 200 }}
+              className="flex items-center gap-3 justify-center hover:drop-shadow-lg"
+            >
               <MapPin className="w-5 h-5 text-primary transition-all duration-300 hover:text-primary/80" />
               <span>Sabinov, Slovensko</span>
             </motion.div>
@@ -233,8 +250,16 @@ export default function ReservationSection() {
                 className="rounded-xl border bg-white dark:bg-gray-800/90 shadow-xl"
                 modifiers={{ today: new Date() }}
                 modifiersStyles={{
-                  today: { border: "1px solid #3b82f6", borderRadius: "50%", color: "#3b82f6" },
-                  selected: { backgroundColor: "#3b82f6", color: "white", borderRadius: "50%" },
+                  today: {
+                    border: "1px solid #3b82f6",
+                    borderRadius: "50%",
+                    color: "#3b82f6",
+                  },
+                  selected: {
+                    backgroundColor: "#3b82f6",
+                    color: "white",
+                    borderRadius: "50%",
+                  },
                 }}
               />
             </div>
@@ -242,8 +267,13 @@ export default function ReservationSection() {
         </div>
 
         {/* Reservation Form */}
-        <form onSubmit={handleSubmit} className="flex flex-col justify-center space-y-4 max-w-lg mx-auto w-full px-6 h-full">
-          <h3 className="text-2xl font-bold mb-4 text-center">Rezervácia termínu</h3>
+        <form
+          onSubmit={handleSubmit}
+          className="flex flex-col justify-center space-y-4 px-6 h-full md:col-span-2 lg:col-span-1"
+        >
+          <h3 className="text-2xl font-bold mb-4 text-center">
+            Rezervácia termínu
+          </h3>
 
           <div className="grid grid-cols-2 gap-3">
             <div className="relative">
@@ -251,8 +281,12 @@ export default function ReservationSection() {
                 placeholder="Meno *"
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
-                onBlur={() => setTouched(prev => ({ ...prev, firstName: true }))}
-                className={`${touched.firstName && !valid.firstName ? "border-red-500" : ""}`}
+                onBlur={() =>
+                  setTouched((prev) => ({ ...prev, firstName: true }))
+                }
+                className={`${
+                  touched.firstName && !valid.firstName ? "border-red-500" : ""
+                }`}
               />
               <div className="absolute right-3 top-3">
                 <ValidationIcon field="firstName" />
@@ -264,8 +298,12 @@ export default function ReservationSection() {
                 placeholder="Priezvisko *"
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
-                onBlur={() => setTouched(prev => ({ ...prev, lastName: true }))}
-                className={`${touched.lastName && !valid.lastName ? "border-red-500" : ""}`}
+                onBlur={() =>
+                  setTouched((prev) => ({ ...prev, lastName: true }))
+                }
+                className={`${
+                  touched.lastName && !valid.lastName ? "border-red-500" : ""
+                }`}
               />
               <div className="absolute right-3 top-3">
                 <ValidationIcon field="lastName" />
@@ -279,8 +317,10 @@ export default function ReservationSection() {
               placeholder="Email *"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              onBlur={() => setTouched(prev => ({ ...prev, email: true }))}
-              className={`${touched.email && !valid.email ? "border-red-500" : ""}`}
+              onBlur={() => setTouched((prev) => ({ ...prev, email: true }))}
+              className={`${
+                touched.email && !valid.email ? "border-red-500" : ""
+              }`}
             />
             <div className="absolute right-3 top-3">
               <ValidationIcon field="email" />
@@ -293,8 +333,14 @@ export default function ReservationSection() {
               placeholder="Telefónne číslo *"
               value={phoneNumber}
               onChange={(e) => setPhoneNumber(e.target.value)}
-              onBlur={() => setTouched(prev => ({ ...prev, phoneNumber: true }))}
-              className={`${touched.phoneNumber && !valid.phoneNumber ? "border-red-500" : ""}`}
+              onBlur={() =>
+                setTouched((prev) => ({ ...prev, phoneNumber: true }))
+              }
+              className={`${
+                touched.phoneNumber && !valid.phoneNumber
+                  ? "border-red-500"
+                  : ""
+              }`}
             />
             <div className="absolute right-3 top-3">
               <ValidationIcon field="phoneNumber" />
@@ -309,13 +355,20 @@ export default function ReservationSection() {
             className="bg-white/90 dark:bg-gray-800/90 cursor-not-allowed"
           />
 
-          <Select value={selectedPackageId} onValueChange={setSelectedPackageId}>
+          <Select
+            value={selectedPackageId}
+            onValueChange={setSelectedPackageId}
+          >
             <SelectTrigger className="bg-white/90 dark:bg-gray-800/90 text-gray-900 dark:text-gray-100">
               <SelectValue placeholder="Select a Package *" />
             </SelectTrigger>
             <SelectContent className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
               {packages.map((pkg) => (
-                <SelectItem key={pkg.id} value={pkg.id.toString()}>
+                <SelectItem
+                  className="hover:bg-gray-400"
+                  key={pkg.id}
+                  value={pkg.id.toString()}
+                >
                   {pkg.displayName} — €{pkg.basePrice}
                 </SelectItem>
               ))}
