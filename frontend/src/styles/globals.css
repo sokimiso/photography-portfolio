@@ -1,39 +1,39 @@
 @import "tailwindcss";
 
 /* -------------------------------
-   Light Theme
---------------------------------- */
+    Light Theme
+  --------------------------------- */
 :root {
   /* Backgrounds */
-  --background: #F4F1DE;        /* main page background */
-  --foreground: #2e2e2e;        /* primary text */
-  --card-background: #2C2E43;   /* card/panel background */
-  --primary: #e76f51;           /* main accent / buttons */
-  --primary-light: #F2CC8F;     /* lighter accent */
-  --secondary: #e8f3f2;         /* secondary accent / links */
+  --background: #f4f1de; /* main page background */
+  --foreground: #2e2e2e; /* primary text */
+  --card-background: #2c2e43; /* card/panel background */
+  --primary: #e76f51; /* main accent / buttons */
+  --primary-light: #f2cc8f; /* lighter accent */
+  --secondary: #e8f3f2; /* secondary accent / links */
 
   /* Font families */
-  --font-sans: 'Inter', system-ui, sans-serif;
-  --font-heading: 'Playfair Display', serif;
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-heading: "Playfair Display", serif;
 }
 
 /* -------------------------------
-   Dark Theme
---------------------------------- */
+    Dark Theme
+  --------------------------------- */
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #264653;       /* main dark background */
-    --foreground: #d4dedf;       /* text for dark bg */
-    --card-background: #2C2E43;  /* slightly darker panels */
-    --primary: #ee6c4d;          /* accent remains same */
-    --primary-light: #F2CC8F;
+    --background: #264653; /* main dark background */
+    --foreground: #d4dedf; /* text for dark bg */
+    --card-background: #2c2e43; /* slightly darker panels */
+    --primary: #ee6c4d; /* accent remains same */
+    --primary-light: #f2cc8f;
     --secondary: #e8f3f2;
   }
 }
 
 /* -------------------------------
-   Apply variables
---------------------------------- */
+    Apply variables
+  --------------------------------- */
 body {
   background-color: var(--background);
   color: var(--foreground);
@@ -42,7 +42,12 @@ body {
 }
 
 /* Headings */
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-family: var(--font-heading);
   color: var(--foreground);
 }
@@ -56,7 +61,7 @@ a:hover {
   color: var(--primary-light);
 }
 
-/* Buttons */ 
+/* Buttons */
 .main-ui-button {
   background-color: var(--primary);
   color: white;
@@ -99,7 +104,7 @@ html {
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE 10+ */
   scroll-behavior: smooth;
-  data-scroll-behavior: smooth
+  data-scroll-behavior: smooth;
 }
 html::-webkit-scrollbar {
   display: none; /* Chrome, Safari, Edge */

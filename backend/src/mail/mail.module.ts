@@ -17,7 +17,7 @@ import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handleba
         },
       },
       defaults: {
-        from: `<${process.env.MAIL_FROM || process.env.SMTP_USER}>`,
+        from: 'sokirka.com',
       },
       template: {
         dir: join(process.cwd(), 'src/mail/templates'), // <- use project root
