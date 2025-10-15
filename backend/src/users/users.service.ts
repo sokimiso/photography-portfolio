@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -9,6 +9,8 @@ import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class UsersService {
+  private readonly logger = new Logger(UsersService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly mailService: MailService, // dependency for sending emails
@@ -18,50 +20,89 @@ export class UsersService {
   // CREATE USER
   // ----------------------------------------
   async createUser(createUserDto: CreateUserDto) {
-    const phone = createUserDto.phoneNumber || '';
-    const tempPassword = phone.slice(-6).padStart(6, '0');
-    const passwordHash = await bcrypt.hash(tempPassword, 10);
+    this.logger.log(
+      `[CREATE_USER] Incoming payload: ${JSON.stringify(createUserDto)}`,
+    );
 
-    const newUser = await this.prisma.user.create({
-      data: {
-        email: createUserDto.email,
-        firstName: createUserDto.firstName,
-        lastName: createUserDto.lastName,
-        phoneNumber: createUserDto.phoneNumber ?? '',
-        deliveryAddress: createUserDto.deliveryAddress || undefined,
-        role: createUserDto.role || UserRole.CUSTOMER,
-        passwordHash,
-        emailConfirmed: false,
-      },
-    });
+    try {
+      const phone = createUserDto.phoneNumber || '';
+      const tempPassword = phone.slice(-6).padStart(6, '0');
+      const passwordHash = await bcrypt.hash(tempPassword, 10);
 
-    // Send confirmation email if required
-    if (createUserDto.sendConfirmationEmail) {
-      try {
-        const emailToken = jwt.sign(
-          { userId: newUser.id, email: newUser.email },
-          process.env.EMAIL_CONFIRM_SECRET as string,
-          { expiresIn: '7d' },
+      // Create the user in the DB
+      const newUser = await this.prisma.user.create({
+        data: {
+          email: createUserDto.email,
+          firstName: createUserDto.firstName,
+          lastName: createUserDto.lastName,
+          phoneNumber: createUserDto.phoneNumber ?? '',
+          deliveryAddress: createUserDto.deliveryAddress || undefined,
+          role: createUserDto.role || UserRole.CUSTOMER,
+          passwordHash,
+          emailConfirmed: false,
+        },
+      });
+
+      this.logger.log(
+        `[CREATE_USER] Created user ID: ${newUser.id}, email: ${newUser.email}`,
+      );
+
+      // Check if confirmation email should be sent
+      if (!createUserDto.sendConfirmationEmail) {
+        this.logger.warn(
+          `[CREATE_USER] Skipping confirmation email for ${newUser.email} — sendConfirmationEmail flag is false or undefined.`,
         );
-
-        await this.prisma.user.update({
-          where: { id: newUser.id },
-          data: {
-            emailConfirmationToken: emailToken,
-            emailConfirmationTokenExpiresAt: new Date(
-              Date.now() + 7 * 24 * 60 * 60 * 1000,
-            ),
-          },
-        });
-
-        await this.mailService.sendEmailConfirmation(newUser.email, emailToken);
-        console.log(`Confirmation email sent to ${newUser.email}`);
-      } catch (err) {
-        console.error('Failed to send confirmation email:', err);
+        return newUser;
       }
-    }
 
-    return newUser;
+      // Validate EMAIL_CONFIRM_SECRET
+      if (!process.env.EMAIL_CONFIRM_SECRET) {
+        this.logger.error(
+          `[CREATE_USER] Missing EMAIL_CONFIRM_SECRET in environment variables!`,
+        );
+        throw new Error('EMAIL_CONFIRM_SECRET is not set');
+      }
+
+      // Generate confirmation token
+      const emailToken = jwt.sign(
+        { userId: newUser.id, email: newUser.email },
+        process.env.EMAIL_CONFIRM_SECRET as string,
+        { expiresIn: '7d' },
+      );
+
+      this.logger.log(
+        `[CREATE_USER] Generated email confirmation token for ${newUser.email}`,
+      );
+
+      // Update user with token
+      await this.prisma.user.update({
+        where: { id: newUser.id },
+        data: {
+          emailConfirmationToken: emailToken,
+          emailConfirmationTokenExpiresAt: new Date(
+            Date.now() + 7 * 24 * 60 * 60 * 1000,
+          ),
+        },
+      });
+
+      this.logger.log(
+        `[CREATE_USER] Stored email confirmation token in DB for ${newUser.email}`,
+      );
+
+      // Send confirmation email
+      await this.mailService.sendEmailConfirmation(newUser.email, emailToken);
+      this.logger.log(
+        `[CREATE_USER] Confirmation email sent successfully to ${newUser.email}`,
+      );
+
+      return newUser;
+    } catch (err: any) {
+      this.logger.error(
+        `[CREATE_USER] Failed to create user or send confirmation email.`,
+        err.stack || err,
+      );
+      throw err;
+    }
   }
 
   // ----------------------------------------
