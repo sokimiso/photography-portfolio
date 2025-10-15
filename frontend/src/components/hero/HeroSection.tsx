@@ -16,7 +16,9 @@ export default function HeroSection() {
         const photos = res.data;
 
         if (photos.length > 0) {
-          const visiblePhotos = photos.filter((p: any) => p.isVisible && !p.deletedAt);
+          const visiblePhotos = photos.filter(
+            (p: any) => p.isVisible && !p.deletedAt
+          );
           const pool = visiblePhotos.length > 0 ? visiblePhotos : photos;
           const randomIndex = Math.floor(Math.random() * pool.length);
           setBgImage(pool[randomIndex].url);
@@ -24,7 +26,6 @@ export default function HeroSection() {
           // fallback images
           const fallback = [
             "/hero/photography-hero-1.jpg",
-            "/hero/photography-hero-2.jpg",
             "/hero/photography-hero-3.jpg",
             "/hero/photography-hero-4.jpg",
           ];
@@ -36,7 +37,6 @@ export default function HeroSection() {
         // fallback if backend fails
         const fallback = [
           "/hero/photography-hero-1.jpg",
-          "/hero/photography-hero-2.jpg",
           "/hero/photography-hero-3.jpg",
           "/hero/photography-hero-4.jpg",
         ];
@@ -87,7 +87,9 @@ export default function HeroSection() {
           <motion.a
             onClick={(e) => {
               e.preventDefault();
-              const reservationSection = document.getElementById("reservation-section");
+              const reservationSection = document.getElementById(
+                "reservation-section"
+              );
               reservationSection?.scrollIntoView({ behavior: "smooth" });
             }}
             className="inline-block mt-6 px-6 py-3 rounded-lg bg-primary bg-white/60 dark:bg-gray-900/60 text-card-background font-medium shadow-lg hover:bg-primary-light transition-colors cursor-pointer"
