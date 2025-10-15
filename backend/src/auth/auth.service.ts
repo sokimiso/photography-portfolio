@@ -11,38 +11,48 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
+  /** Validate user credentials */
   async validateUser(email: string, password: string) {
     const user = await this.usersService.findByEmail(email);
-    if (!user) throw new UnauthorizedException('Invalid credentials');
+
+    if (!user || user.deletedAt || !user.emailConfirmed) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
 
     const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
-    if (!isPasswordValid) throw new UnauthorizedException('Invalid credentials');
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
 
     return user;
   }
 
+  /** Login and generate JWT */
   async login(loginDto: LoginDto) {
     const user = await this.validateUser(loginDto.email, loginDto.password);
 
-    // Update last login timestamp using usersService
+    // Update last login timestamp
     await this.usersService.updateLastLogin(user.id);
 
     const payload = { sub: user.id, role: user.role };
-    const token = this.jwtService.sign(payload);
-    
+    const token = this.jwtService.sign(payload, { expiresIn: '1d' });
 
     return {
       token,
       role: user.role,
       email: user.email,
       id: user.id,
+      firstName: user.firstName,
+      lastName: user.lastName,
     };
   }
+
+  /** Verify token */
   async verifyToken(token: string) {
     try {
-      return this.jwtService.verify(token); // Returns the payload
+      return this.jwtService.verify(token);
     } catch (err) {
-      return null; // or throw new UnauthorizedException()
+      return null;
     }
-  }  
+  }
 }

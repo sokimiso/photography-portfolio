@@ -16,43 +16,71 @@ import { Public } from '../auth/decorators/public.decorator';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  /** LOGIN */
   @Public()
   @Post('login')
   async login(
     @Body() loginDto: LoginDto,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const { token, role, email, id } = await this.authService.login(loginDto);
+    const { token, role, email, id, firstName, lastName } =
+      await this.authService.login(loginDto);
+
+    const isProd = process.env.NODE_ENV === 'production';
 
     // Set HTTP-only cookie
     res.cookie('token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production', // use HTTPS in production
-      sameSite: 'none',
+      secure: isProd, // only send over HTTPS in prod
+      sameSite: isProd ? 'none' : 'lax', // allow localhost testing
       maxAge: 24 * 60 * 60 * 1000, // 1 day
+      path: '/',
     });
 
-    return { role, email, id }; // send user info to frontend
+    return {
+      message: 'Login successful',
+      user: { id, role, email, firstName, lastName },
+    };
   }
 
+  /** LOGOUT */
   @Post('logout')
   async logout(@Res({ passthrough: true }) res: Response) {
-    res.clearCookie('token');
+    const isProd = process.env.NODE_ENV === 'production';
+
+    res.clearCookie('token', {
+      httpOnly: true,
+      secure: isProd,
+      sameSite: isProd ? 'none' : 'lax',
+      path: '/',
+    });
+
     return { message: 'Logged out' };
   }
 
+  /** GET CURRENT USER */
   @Get('me')
   async me(@Req() req: Request) {
-    const token = req.cookies['token'];
-    if (!token) throw new UnauthorizedException();
+    const token = req.cookies?.token;
+
+    if (!token) throw new UnauthorizedException('Not authenticated');
 
     const payload = await this.authService.verifyToken(token);
-    if (!payload) throw new UnauthorizedException();
+    if (!payload) throw new UnauthorizedException('Invalid token');
+
+    // Fetch user info from UsersService
+    const user = await this.authService['usersService'].findById(payload.sub);
+
+    if (!user || user.deletedAt)
+      throw new UnauthorizedException('User not found');
 
     return {
       user: {
-        id: payload.sub,
-        role: payload.role,
+        id: user.id,
+        role: user.role,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
       },
     };
   }
