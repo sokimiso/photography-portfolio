@@ -107,7 +107,7 @@ model Order {
   transportPrice  Decimal      @db.Decimal(10,2)
   amountPaid  Decimal      @db.Decimal(10,2) @default(0)
   currency    String       @default("EUR")
-
+  customerMessage  String?
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
   deletedAt   DateTime?

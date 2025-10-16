@@ -114,21 +114,16 @@ export default function ReservationSection() {
 
     setLoading(true);
     try {
-      const userRes = await apiClient.post(
-        "/api/users",
-        { firstName, lastName, email, phoneNumber },
-        { withCredentials: true }
-      );
-      const userId = userRes.data.id;
-
       await apiClient.post(
-        "/api/orders/create",
+        "/api/reservations",
         {
-          userId,
+          firstName,
+          lastName,
+          email,
+          phoneNumber,
           packageId: selectedPackageId,
           shootDate: selectedDate ? selectedDate.toISOString() : undefined,
-          notes: message,
-          status: "PENDING",
+          customerMessage: message,
         },
         { withCredentials: true }
       );
@@ -272,9 +267,8 @@ export default function ReservationSection() {
           className="flex flex-col justify-center space-y-4 px-6 h-full md:col-span-2 lg:col-span-1"
         >
           <h3 className="text-2xl font-bold mb-4 text-center">
-            Rezervácia termínu
+            Rezervácia termínu (dočasne nedostupné)
           </h3>
-
           <div className="grid grid-cols-2 gap-3">
             <div className="relative">
               <Input
@@ -381,10 +375,10 @@ export default function ReservationSection() {
             value={message}
             onChange={(e) => setMessage(e.target.value)}
           />
-
           <Button
             type="submit"
             disabled={
+              process.env.NEXT_PUBLIC_ENVIRONMENT === "production" ||
               loading ||
               !valid.firstName ||
               !valid.lastName ||
@@ -393,17 +387,17 @@ export default function ReservationSection() {
               !selectedPackageId
             }
             variant="outline"
-            className={`w-full text-lg py-6 cursor-pointer ${
-              !valid.firstName ||
-              !valid.lastName ||
-              !valid.email ||
-              !valid.phoneNumber ||
-              !selectedPackageId
-                ? "opacity-50 cursor-not-allowed"
-                : ""
+            className={`w-full text-lg py-6 ${
+              process.env.NEXT_PUBLIC_ENVIRONMENT === "production"
+                ? "opacity-40 cursor-not-allowed"
+                : "cursor-pointer"
             }`}
           >
-            {loading ? "Posielam..." : "Odoslať požiadavku"}
+            {process.env.NEXT_PUBLIC_ENVIRONMENT === "production"
+              ? "Dočasne nedostupné"
+              : loading
+              ? "Posielam..."
+              : "Odoslať požiadavku"}
           </Button>
         </form>
       </motion.div>

@@ -1,9 +1,9 @@
-import { Injectable, NotFoundException  } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Order } from '@prisma/client';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
-import { OrderStatus } from "@prisma/client";
+import { OrderStatus } from '@prisma/client';
 
 @Injectable()
 export class OrdersService {
@@ -13,11 +13,14 @@ export class OrdersService {
   async createOrder(dto: CreateOrderDto, userId: string) {
     const now = new Date();
     const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, "0");
-    const day = String(now.getDate()).padStart(2, "0");
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
 
     while (true) {
-      const randomFour = String(Math.floor(Math.random() * 10000)).padStart(4, "0");
+      const randomFour = String(Math.floor(Math.random() * 10000)).padStart(
+        4,
+        '0',
+      );
       const readableOrderNumber = `${year}${month}${day}${randomFour}`;
 
       try {
@@ -32,14 +35,15 @@ export class OrdersService {
             finalPrice: dto.finalPrice ?? 0,
             transportPrice: dto.transportPrice ?? 0,
             amountPaid: dto.amountPaid ?? 0,
-            status: dto.status ?? "PENDING",
+            status: dto.status ?? 'PENDING',
             readableOrderNumber,
-            userId: dto.userId, // assign user by id
+            userId, // assign user by id
+            customerMessage: dto.customerMessage ?? undefined,
           },
           include: { user: true, package: true },
         });
       } catch (error: any) {
-        if (error.code === "P2002") {
+        if (error.code === 'P2002') {
           // Unique constraint violation → retry
           continue;
         }
@@ -49,7 +53,11 @@ export class OrdersService {
   }
 
   // ---------------- UPDATE ORDER (with photo handling) ----------------
-  async updateOrder(orderId: string, dto: UpdateOrderDto & { photos?: any[] }, adminId: string) {
+  async updateOrder(
+    orderId: string,
+    dto: UpdateOrderDto & { photos?: any[] },
+    adminId: string,
+  ) {
     const existingOrder = await this.prisma.order.findUnique({
       where: { id: orderId },
       include: { user: true, package: true, orderPhotos: true },
@@ -72,12 +80,8 @@ export class OrdersService {
         shootPlace: dto.shootPlace ?? undefined,
         shootDate: dto.shootDate ? new Date(dto.shootDate) : undefined,
         status: dto.status ?? undefined,
-        package: dto.packageId
-          ? { connect: { id: dto.packageId } }
-          : undefined,
-        user: dto.userId
-          ? { connect: { id: dto.userId } }
-          : undefined,
+        package: dto.packageId ? { connect: { id: dto.packageId } } : undefined,
+        user: dto.userId ? { connect: { id: dto.userId } } : undefined,
       },
       include: { user: true, package: true },
     });
@@ -112,12 +116,11 @@ export class OrdersService {
     return updatedOrder;
   }
 
-
   // ---------------- SOFT DELETE ORDER ----------------
   async softDeleteOrder(orderId: string, adminId: string) {
     const existingOrder = await this.prisma.order.findUnique({
       where: { id: orderId },
-      });
+    });
 
     if (!existingOrder) {
       throw new NotFoundException(`Order with id ${orderId} not found`);
@@ -129,21 +132,20 @@ export class OrdersService {
         deletedAt: new Date(), // mark as deleted
       },
     });
-  }  
-
+  }
 
   // Find an order by readable number
   async findByReadableNumber(code: string) {
     return this.prisma.order.findUnique({
-      where: { readableOrderNumber: code, deletedAt: null, },
+      where: { readableOrderNumber: code, deletedAt: null },
     });
-  } 
+  }
 
   // Find an order by status
   async findOrdersByStatus(
     status: 'PENDING' | 'CONFIRMED' | 'COMPLETED' | 'CANCELLED',
     limit?: number,
-    orderDirection: 'asc' | 'desc' = 'asc'
+    orderDirection: 'asc' | 'desc' = 'asc',
   ): Promise<Order[]> {
     return this.prisma.order.findMany({
       where: { status, deletedAt: null },
@@ -158,7 +160,7 @@ export class OrdersService {
     return this.prisma.photoshootPackage.findMany({
       where: { deletedAt: null },
     });
-  }  
+  }
 
   // Fetch all orders with status != COMPLETED
   async getPendingOrders() {
@@ -168,8 +170,8 @@ export class OrdersService {
         status: { not: 'COMPLETED' }, // filter out completed orders
       },
       include: {
-        user: true,      // include user info
-        package: true,   // include package info
+        user: true, // include user info
+        package: true, // include package info
       },
       orderBy: {
         createdAt: 'desc', // newest first
@@ -187,7 +189,7 @@ export class OrdersService {
 
     // Filter orders where amountPaid < finalPrice
     return completedOrders.filter(
-      o => (o.amountPaid ?? 0) < (o.finalPrice ?? 0)
+      (o) => (o.amountPaid ?? 0) < (o.finalPrice ?? 0),
     );
   }
 
@@ -209,7 +211,9 @@ export class OrdersService {
         | 'COMPLETED'
         | 'CANCELLED';
 
-      if (['PENDING', 'CONFIRMED', 'COMPLETED', 'CANCELLED'].includes(normalized)) {
+      if (
+        ['PENDING', 'CONFIRMED', 'COMPLETED', 'CANCELLED'].includes(normalized)
+      ) {
         where.status = normalized;
       }
     }

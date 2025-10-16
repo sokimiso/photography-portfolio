@@ -1,4 +1,10 @@
-import { IsString, IsOptional, IsNumber, IsEnum, IsDateString } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsNumber,
+  IsEnum,
+  IsDateString,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import { OrderStatus } from '@prisma/client';
 
@@ -19,7 +25,7 @@ export class CreateOrderDto {
 
   @IsOptional()
   @IsString()
-  notes?: string;  
+  notes?: string;
 
   @IsOptional()
   @IsEnum(OrderStatus)
@@ -49,4 +55,8 @@ export class CreateOrderDto {
   @IsNumber()
   @Type(() => Number)
   amountPaid?: number;
+
+  @IsString()
+  @IsOptional()
+  customerMessage?: string;
 }
