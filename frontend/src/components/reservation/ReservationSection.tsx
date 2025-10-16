@@ -97,6 +97,12 @@ export default function ReservationSection() {
   /** Submit handler */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Prevent submission in production
+    if (process.env.NEXT_PUBLIC_ENVIRONMENT === "production") {
+      return;
+    }
+
     if (
       !valid.firstName ||
       !valid.lastName ||
