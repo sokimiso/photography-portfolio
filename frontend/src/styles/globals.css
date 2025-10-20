@@ -57,8 +57,19 @@ a {
   color: var(--primary);
   transition: color 0.2s ease;
 }
+
 a:hover {
   color: var(--primary-light);
+}
+
+.navbar-a {
+  color: inherit;
+  transition: color 0.2s ease;
+}
+
+.navbar-a:hover {
+  color: var(--primary-light);
+  transition: color 0.2s ease;
 }
 
 /* Buttons */

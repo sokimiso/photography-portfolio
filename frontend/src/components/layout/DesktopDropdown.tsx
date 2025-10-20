@@ -45,7 +45,13 @@ export default function DesktopDropdown({
             whileHover={{ scale: 1.03 }} // subtle scale-up on hover
             transition={{ duration: 0.15 }}
           >
-            {item.href ? <Link href={item.href}className={menuItemClasses}>{item.label}</Link> : item.label}
+            {item.href ? (
+              <Link href={item.href} className={menuItemClasses}>
+                {item.label}
+              </Link>
+            ) : (
+              item.label
+            )}
           </motion.span>
         )}
       </div>
@@ -77,7 +83,7 @@ export default function DesktopDropdown({
               >
                 <Link
                   href={subItem.href}
-                  className="block px-4 py-2 text-gray-900 dark:text-gray-100 hover:text-blue-500 dark:hover:text-blue-400 transition-colors"
+                  className="navbar-a block px-4 py-2 text-gray-900 dark:text-gray-100 transition-colors"
                 >
                   {subItem.label}
                 </Link>
@@ -86,6 +92,6 @@ export default function DesktopDropdown({
           </motion.div>
         </AnimatePresence>
       )}
-    </div>  
+    </div>
   );
 }

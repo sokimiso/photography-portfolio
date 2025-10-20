@@ -273,7 +273,7 @@ export default function ReservationSection() {
           className="flex flex-col justify-center space-y-4 px-6 h-full md:col-span-2 lg:col-span-1"
         >
           <h3 className="text-2xl font-bold mb-4 text-center">
-            Rezervácia termínu (dočasne nedostupné)
+            Rezervácia termínu
           </h3>
           <div className="grid grid-cols-2 gap-3">
             <div className="relative">

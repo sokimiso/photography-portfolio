@@ -43,7 +43,7 @@ export default function MobileDropdown({
       <div className="border-b border-gray-200 dark:border-gray-700">
         <button
           onClick={() => toggleOpen(index)}
-          className="w-full text-left px-3 py-2 font-normal text-gray-900 dark:text-gray-100 flex justify-between items-center hover:text-blue-500 dark:hover:text-blue-400 transition-colors"
+          className="w-full text-left px-3 py-2 font-normal text-gray-900 dark:text-gray-100 flex justify-between items-center navbar-a transition-colors uppercase"
         >
           {item.label}
           <motion.span
@@ -80,7 +80,7 @@ export default function MobileDropdown({
                 >
                   <Link
                     href={subItem.href}
-                    className="block px-5 py-2 text-gray-900 dark:text-gray-100 hover:text-blue-500 dark:hover:text-blue-400 transition-colors font-normal uppercase"
+                    className="block px-5 py-2 text-gray-900 dark:text-gray-100 navbar-a transition-colors font-normal uppercase"
                     onClick={closeMenu}
                   >
                     {subItem.label}
@@ -100,7 +100,7 @@ export default function MobileDropdown({
       {item.href ? (
         <Link
           href={item.href}
-          className="block px-3 py-2 font-normal text-gray-900 dark:text-gray-100 hover:text-blue-500 dark:hover:text-blue-400 transition-colors"
+          className="block px-3 py-2 font-normal text-gray-900 dark:text-gray-100 navbar-a transition-colors"
           onClick={closeMenu}
         >
           {item.label}
