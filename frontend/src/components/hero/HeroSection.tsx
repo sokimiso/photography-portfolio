@@ -8,6 +8,8 @@ import apiClient from "@/lib/apiClient";
 export default function HeroSection() {
   const [bgImage, setBgImage] = useState<string>("");
   const texts = useTexts();
+  const BACKEND_URL =
+    process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:4000";
 
   useEffect(() => {
     const fetchHeroPhotos = async () => {
@@ -24,22 +26,14 @@ export default function HeroSection() {
           setBgImage(pool[randomIndex].url);
         } else {
           // fallback images
-          const fallback = [
-            "/hero/photography-hero-1.jpg",
-            "/hero/photography-hero-3.jpg",
-            "/hero/photography-hero-4.jpg",
-          ];
+          const fallback = ["/hero/photography-hero-1.jpg"];
           const randomIndex = Math.floor(Math.random() * fallback.length);
           setBgImage(fallback[randomIndex]);
         }
       } catch (err) {
         console.error("Failed to load hero images:", err);
         // fallback if backend fails
-        const fallback = [
-          "/hero/photography-hero-1.jpg",
-          "/hero/photography-hero-3.jpg",
-          "/hero/photography-hero-4.jpg",
-        ];
+        const fallback = ["/hero/photography-hero-1.jpg"];
         const randomIndex = Math.floor(Math.random() * fallback.length);
         setBgImage(fallback[randomIndex]);
       }
@@ -60,7 +54,7 @@ export default function HeroSection() {
             transition={{ duration: 1 }}
             className="absolute inset-0 bg-center bg-cover"
             style={{
-              backgroundImage: `url(${bgImage})`,
+              backgroundImage: `url(${BACKEND_URL}${bgImage})`,
               filter: "brightness(1.0) contrast(1.0)",
             }}
           />

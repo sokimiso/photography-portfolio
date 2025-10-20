@@ -61,7 +61,11 @@ export const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
       <span
         className={`
           ${sizeClasses.labelText} font-medium transition-colors duration-200
-          ${checked ? "text-[color:var(--primary)]" : "text-gray-900 dark:text-gray-200"}
+          ${
+            checked
+              ? "text-[color:var(--primary)]"
+              : "text-gray-900 dark:text-gray-200"
+          }
         `}
       >
         {label}
