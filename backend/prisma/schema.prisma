@@ -219,9 +219,10 @@ model OrderPhoto {
   id                      String   @id @default(uuid())
   orderId                 String
   photoId                 String
+  isVisible   		  Boolean  @default(true)
   isFinalDelivery         Boolean  @default(false)
-  toPostprocess Boolean @default(false)
-  toPrint   Boolean  @default(false)
+  toPostprocess 	  Boolean  @default(false)
+  toPrint   		  Boolean  @default(false)
 
   // Relations
   order   Order @relation(fields: [orderId], references: [id])

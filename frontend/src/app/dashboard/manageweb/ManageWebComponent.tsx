@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import Breadcrumb from "../components/Breadcrumb";
 import {
@@ -23,56 +23,117 @@ export default function ManageWebComponent() {
   const [photoTagInputs, setPhotoTagInputs] = useState<Record<string, string>>(
     {}
   );
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
 
-  const path = ["Dashboard", "Manage Web", "Hero Photos"];
+  // Management
+  const [allCategories, setAllCategories] = useState<any[]>([]);
+  const [allTags, setAllTags] = useState<any[]>([]);
+  const [showCategoryManager, setShowCategoryManager] = useState(false);
+  const [showTagManager, setShowTagManager] = useState(false);
+
+  // New Category/Tag inputs
+  const [newCategoryName, setNewCategoryName] = useState("");
+  const [newCategoryFriendly, setNewCategoryFriendly] = useState("");
+  const [newCategoryPublic, setNewCategoryPublic] = useState(false);
+
+  const [newTagName, setNewTagName] = useState("");
+  const [newTagFriendly, setNewTagFriendly] = useState("");
+  const [newTagPublic, setNewTagPublic] = useState(false);
+
   const BACKEND_URL =
     process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:4000";
 
-  /** Load all categories from backend */
+  const path = ["Dashboard", "Manage Web", "Hero Photos"];
+
+  /** Load all categories for dropdown */
   const loadCategories = async () => {
     try {
       const res = await axios.get(`${BACKEND_URL}/api/photos/categories`);
       const data = res.data;
       setCategories(data);
-      if (data.length > 0 && !selectedCategory) {
+      if (data.length > 0 && !selectedCategory)
         setSelectedCategory(data[0].name);
-      }
     } catch (err) {
       console.error("Error loading categories:", err);
     }
   };
 
-  /** Load photos for the selected category */
-  const loadPhotos = async (categoryName?: string) => {
+  /** Load all categories/tags for management */
+  const loadAllCategoriesAndTags = async () => {
+    try {
+      const [catRes, tagRes] = await Promise.all([
+        axios.get(`${BACKEND_URL}/api/photos/categories`),
+        axios.get(`${BACKEND_URL}/api/photos/tags`),
+      ]);
+      setAllCategories(catRes.data);
+      setAllTags(tagRes.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  /** --- Load photos with pagination --- */
+  const loadPhotos = async (
+    categoryName?: string,
+    pageNum = 1,
+    append = false
+  ) => {
     try {
       const category = categoryName || selectedCategory;
       if (!category) return;
-      const data = await getPhotosByCategory(category);
-      setPhotos(data);
 
-      // Initialize tag inputs for all photos
+      const res = await getPhotosByCategory(category, pageNum, 30, true);
+      const data = res.photos || res;
+      if (append) setPhotos((prev) => [...prev, ...data]);
+      else setPhotos(data);
+
       const initialTags: Record<string, string> = {};
-      data.forEach((photo: any) => {
+      (append ? [...photos, ...data] : data).forEach((photo: any) => {
         initialTags[photo.id] =
           photo.tags?.map((t: { name: string }) => t.name).join(", ") || "";
       });
       setPhotoTagInputs(initialTags);
+      setHasMore(res.hasMore ?? false);
     } catch (err) {
-      console.error("Error loading photos:", err);
+      console.error(err);
     }
   };
 
-  /** Initial load of categories */
+  /** Initial load */
   useEffect(() => {
     loadCategories();
+    loadAllCategoriesAndTags();
   }, []);
 
-  /** Load photos whenever category changes */
+  /** Reset page & photos when category changes */
   useEffect(() => {
-    if (selectedCategory) {
-      loadPhotos(selectedCategory);
-    }
+    if (!selectedCategory) return;
+    setPage(1);
+    setPhotos([]);
+    loadPhotos(selectedCategory, 1, false);
   }, [selectedCategory]);
+
+  /** Infinite scroll */
+  const handleScroll = useCallback(() => {
+    if (!hasMore) return;
+    const scrollY = window.scrollY;
+    const innerHeight = window.innerHeight;
+    const offsetHeight = document.body.offsetHeight;
+
+    if (scrollY + innerHeight + 300 >= offsetHeight)
+      setPage((prev) => prev + 1);
+  }, [hasMore]);
+
+  useEffect(() => {
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [handleScroll]);
+
+  useEffect(() => {
+    if (page === 1) return;
+    loadPhotos(selectedCategory, page, true);
+  }, [page, selectedCategory]);
 
   /** Upload new photo */
   const handleUpload = async () => {
@@ -90,7 +151,11 @@ export default function ManageWebComponent() {
       setSelectedFile(null);
       setTitle("");
       setTags("hero");
-      await loadPhotos(selectedCategory);
+
+      setPage(1);
+      setPhotos([]);
+      loadPhotos(selectedCategory, 1, false);
+      loadAllCategoriesAndTags();
     } catch (err) {
       console.error("Upload failed:", err);
     } finally {
@@ -100,24 +165,26 @@ export default function ManageWebComponent() {
 
   const handleToggleVisibility = async (id: string, current: boolean) => {
     await togglePhotoVisibility(id, !current);
-    await loadPhotos(selectedCategory);
+    setPage(1);
+    setPhotos([]);
+    loadPhotos(selectedCategory, 1, false);
   };
 
   const handleSoftDelete = async (id: string) => {
     await deletePhoto(id);
-    await loadPhotos(selectedCategory);
+    setPage(1);
+    setPhotos([]);
+    loadPhotos(selectedCategory, 1, false);
+    loadAllCategoriesAndTags();
   };
 
   const handleHardDelete = async (id: string) => {
-    if (
-      !confirm(
-        "Are you sure you want to permanently delete this photo? This action cannot be undone."
-      )
-    )
-      return;
-
+    if (!confirm("Permanently delete this photo?")) return;
     await hardDeletePhoto(id);
-    await loadPhotos(selectedCategory);
+    setPage(1);
+    setPhotos([]);
+    loadPhotos(selectedCategory, 1, false);
+    loadAllCategoriesAndTags();
   };
 
   const handleUpdateTags = async (photoId: string) => {
@@ -125,12 +192,131 @@ export default function ManageWebComponent() {
       .split(/[,\s]+/)
       .map((t) => t.trim())
       .filter(Boolean);
-
     try {
       await updatePhotoTags(photoId, tagsArray);
-      await loadPhotos(selectedCategory);
+      setPage(1);
+      setPhotos([]);
+      loadPhotos(selectedCategory, 1, false);
     } catch (err) {
-      console.error("Failed to update tags:", err);
+      console.error(err);
+    }
+  };
+
+  const toggleCategoryManager = () => setShowCategoryManager((prev) => !prev);
+  const toggleTagManager = () => setShowTagManager((prev) => !prev);
+
+  /** --- Add New Category --- */
+  const handleAddCategory = async () => {
+    if (!newCategoryName.trim()) return;
+    try {
+      await axios.post(`${BACKEND_URL}/api/photos/categories`, {
+        name: newCategoryName.trim(),
+        friendlyName: newCategoryFriendly.trim(),
+        isPublic: newCategoryPublic,
+      });
+      setNewCategoryName("");
+      setNewCategoryFriendly("");
+      setNewCategoryPublic(false);
+      loadAllCategoriesAndTags();
+      loadCategories();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  /** --- Add New Tag --- */
+  const handleAddTag = async () => {
+    if (!newTagName.trim()) return;
+    try {
+      await axios.post(`${BACKEND_URL}/api/photos/tags`, {
+        name: newTagName.trim(),
+        friendlyName: newTagFriendly.trim(),
+        isPublic: newTagPublic,
+      });
+      setNewTagName("");
+      setNewTagFriendly("");
+      setNewTagPublic(false);
+      loadAllCategoriesAndTags();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  /** --- Update all categories/tags (Save Changes button) --- */
+  const handleSaveChanges = async () => {
+    try {
+      await Promise.all(
+        allCategories.map((cat) =>
+          axios.put(`${BACKEND_URL}/api/photos/categories/${cat.id}`, {
+            name: cat.name,
+            friendlyName: cat.friendlyName,
+            isPublic: cat.isPublic,
+          })
+        )
+      );
+      await Promise.all(
+        allTags.map((tag) =>
+          axios.put(`${BACKEND_URL}/api/photos/tags/${tag.id}`, {
+            name: tag.name,
+            friendlyName: tag.friendlyName,
+            isPublic: tag.isPublic,
+          })
+        )
+      );
+      alert("Categories and tags updated successfully!");
+      loadAllCategoriesAndTags();
+      loadCategories();
+    } catch (err) {
+      console.error(err);
+      alert("Failed to save changes.");
+    }
+  };
+
+  /** --- Soft & Hard delete functions for categories/tags --- */
+  const softDeleteCategory = async (id: string) => {
+    if (!confirm("Soft delete this category?")) return;
+    try {
+      await axios.delete(`${BACKEND_URL}/api/photos/category/${id}`);
+      loadAllCategoriesAndTags();
+      loadCategories();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const hardDeleteCategory = async (cat: any) => {
+    if (
+      !confirm("Permanently delete this category and all its photo mappings?")
+    )
+      return;
+    try {
+      await axios.delete(`${BACKEND_URL}/api/photos/category/hard/${cat.id}`);
+      loadAllCategoriesAndTags();
+      loadCategories();
+      if (cat.name === selectedCategory) setSelectedCategory("");
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const softDeleteTag = async (id: string) => {
+    if (!confirm("Soft delete this tag?")) return;
+    try {
+      await axios.delete(`${BACKEND_URL}/api/photos/tag/${id}`);
+      loadAllCategoriesAndTags();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const hardDeleteTag = async (id: string) => {
+    if (!confirm("Permanently delete this tag and all its photo mappings?"))
+      return;
+    try {
+      await axios.delete(`${BACKEND_URL}/api/photos/tag/hard/${id}`);
+      loadAllCategoriesAndTags();
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -138,138 +324,388 @@ export default function ManageWebComponent() {
     <div className="space-y-6">
       <Breadcrumb path={path} />
 
-      <div className="bg-white dark:bg-gray-900 p-6 rounded-2xl shadow">
-        <h2 className="text-xl font-semibold mb-4">Photo Management</h2>
-
-        {/* Category Dropdown */}
-        <div className="mb-6">
-          <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
-            Select Category
-          </label>
-          <select
-            value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
-            className="dark:bg-gray-700 border rounded px-3 py-2 w-full md:w-1/3"
+      {/* --- CATEGORY / TAG MANAGEMENT --- */}
+      <div className="bg-white dark:bg-gray-900 p-4 rounded-2xl shadow space-y-4">
+        {/* Category Manager */}
+        <div>
+          <button
+            onClick={toggleCategoryManager}
+            className="w-full text-left font-semibold py-2 px-3 bg-gray-200 dark:bg-gray-700 rounded"
           >
-            {categories.map((cat) => (
-              <option key={cat.id} value={cat.name}>
-                {cat.display_name || cat.name}
-              </option>
-            ))}
-          </select>
+            Category Management {showCategoryManager ? "▲" : "▼"}
+          </button>
+          {showCategoryManager && (
+            <div className="overflow-x-auto mt-2 space-y-2">
+              {/* Add New Category */}
+              <div className="flex gap-2 mb-2">
+                <input
+                  type="text"
+                  value={newCategoryName}
+                  placeholder="New category name"
+                  className="border px-2 py-1"
+                  onChange={(e) => setNewCategoryName(e.target.value)}
+                />
+                <input
+                  type="text"
+                  value={newCategoryFriendly}
+                  placeholder="Friendly name (optional)"
+                  className="border px-2 py-1"
+                  onChange={(e) => setNewCategoryFriendly(e.target.value)}
+                />
+                <label className="flex items-center gap-1">
+                  <input
+                    type="checkbox"
+                    checked={newCategoryPublic}
+                    onChange={(e) => setNewCategoryPublic(e.target.checked)}
+                  />
+                  Public
+                </label>
+                <button
+                  className="bg-green-600 text-white px-2 py-1 rounded"
+                  onClick={handleAddCategory}
+                >
+                  Add
+                </button>
+              </div>
+
+              {/* Editable Categories Table */}
+              <table className="w-full text-sm border">
+                <thead>
+                  <tr className="bg-gray-100 dark:bg-gray-800">
+                    <th className="px-2 py-1">Name</th>
+                    <th className="px-2 py-1">Friendly Name</th>
+                    <th className="px-2 py-1">Public</th>
+                    <th className="px-2 py-1">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {allCategories.map((cat, idx) => (
+                    <tr key={cat.id} className="border-b">
+                      <td className="px-2 py-1">
+                        <input
+                          type="text"
+                          value={cat.name}
+                          className="border px-1 py-0.5 w-full"
+                          onChange={(e) =>
+                            setAllCategories((prev) => {
+                              const updated = [...prev];
+                              updated[idx].name = e.target.value;
+                              return updated;
+                            })
+                          }
+                        />
+                      </td>
+                      <td className="px-2 py-1">
+                        <input
+                          type="text"
+                          value={cat.friendlyName || ""}
+                          className="border px-1 py-0.5 w-full"
+                          onChange={(e) =>
+                            setAllCategories((prev) => {
+                              const updated = [...prev];
+                              updated[idx].friendlyName = e.target.value;
+                              return updated;
+                            })
+                          }
+                        />
+                      </td>
+                      <td className="px-2 py-1 text-center">
+                        <input
+                          type="checkbox"
+                          checked={cat.isPublic || false}
+                          onChange={(e) =>
+                            setAllCategories((prev) => {
+                              const updated = [...prev];
+                              updated[idx].isPublic = e.target.checked;
+                              return updated;
+                            })
+                          }
+                        />
+                      </td>
+                      <td className="px-2 py-1 flex gap-2">
+                        <button
+                          className="text-sm bg-yellow-500 text-white px-2 py-1 rounded"
+                          onClick={() => softDeleteCategory(cat.id)}
+                        >
+                          Soft Delete
+                        </button>
+                        <button
+                          className="text-sm bg-red-600 text-white px-2 py-1 rounded"
+                          onClick={() => hardDeleteCategory(cat)}
+                        >
+                          Hard Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
 
-        {/* Upload Form */}
-        <div className="flex flex-col md:flex-row items-center gap-4 mb-6">
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
-            className="border rounded px-3 py-2"
-          />
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Title"
-            className="border rounded px-3 py-2"
-          />
-          <input
-            type="text"
-            value={selectedCategory}
-            onChange={(e) => setTags(e.target.value)}
-            placeholder="Tags (comma or space separated)"
-            className="border rounded px-3 py-2"
-          />
+        {/* Tag Manager */}
+        <div>
           <button
-            onClick={handleUpload}
-            disabled={uploading}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
+            onClick={toggleTagManager}
+            className="w-full text-left font-semibold py-2 px-3 bg-gray-200 dark:bg-gray-700 rounded"
           >
-            {uploading ? "Uploading..." : "Upload"}
+            Tag Management {showTagManager ? "▲" : "▼"}
+          </button>
+          {showTagManager && (
+            <div className="overflow-x-auto mt-2 space-y-2">
+              {/* Add New Tag */}
+              <div className="flex gap-2 mb-2">
+                <input
+                  type="text"
+                  value={newTagName}
+                  placeholder="New tag name"
+                  className="border px-2 py-1"
+                  onChange={(e) => setNewTagName(e.target.value)}
+                />
+                <input
+                  type="text"
+                  value={newTagFriendly}
+                  placeholder="Friendly name (optional)"
+                  className="border px-2 py-1"
+                  onChange={(e) => setNewTagFriendly(e.target.value)}
+                />
+                <label className="flex items-center gap-1">
+                  <input
+                    type="checkbox"
+                    checked={newTagPublic}
+                    onChange={(e) => setNewTagPublic(e.target.checked)}
+                  />
+                  Public
+                </label>
+                <button
+                  className="bg-green-600 text-white px-2 py-1 rounded"
+                  onClick={handleAddTag}
+                >
+                  Add
+                </button>
+              </div>
+
+              {/* Editable Tags Table */}
+              <table className="w-full text-sm border">
+                <thead>
+                  <tr className="bg-gray-100 dark:bg-gray-800">
+                    <th className="px-2 py-1">Name</th>
+                    <th className="px-2 py-1">Friendly Name</th>
+                    <th className="px-2 py-1">Public</th>
+                    <th className="px-2 py-1">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {allTags.map((tag, idx) => (
+                    <tr key={tag.id} className="border-b">
+                      <td className="px-2 py-1">
+                        <input
+                          type="text"
+                          value={tag.name}
+                          className="border px-1 py-0.5 w-full"
+                          onChange={(e) =>
+                            setAllTags((prev) => {
+                              const updated = [...prev];
+                              updated[idx].name = e.target.value;
+                              return updated;
+                            })
+                          }
+                        />
+                      </td>
+                      <td className="px-2 py-1">
+                        <input
+                          type="text"
+                          value={tag.friendlyName || ""}
+                          className="border px-1 py-0.5 w-full"
+                          onChange={(e) =>
+                            setAllTags((prev) => {
+                              const updated = [...prev];
+                              updated[idx].friendlyName = e.target.value;
+                              return updated;
+                            })
+                          }
+                        />
+                      </td>
+                      <td className="px-2 py-1 text-center">
+                        <input
+                          type="checkbox"
+                          checked={tag.isPublic || false}
+                          onChange={(e) =>
+                            setAllTags((prev) => {
+                              const updated = [...prev];
+                              updated[idx].isPublic = e.target.checked;
+                              return updated;
+                            })
+                          }
+                        />
+                      </td>
+                      <td className="px-2 py-1 flex gap-2">
+                        <button
+                          className="text-sm bg-yellow-500 text-white px-2 py-1 rounded"
+                          onClick={() => softDeleteTag(tag.id)}
+                        >
+                          Soft Delete
+                        </button>
+                        <button
+                          className="text-sm bg-red-600 text-white px-2 py-1 rounded"
+                          onClick={() => hardDeleteTag(tag.id)}
+                        >
+                          Hard Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        {/* Save Changes Button */}
+        <div className="flex justify-end mt-4">
+          <button
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+            onClick={handleSaveChanges}
+          >
+            Save Changes
           </button>
         </div>
+      </div>
 
-        {/* Photos Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {photos.map((photo) => {
-            const imageUrl = `${BACKEND_URL}${
-              photo.url.startsWith("/") ? "" : "/"
-            }${photo.url}`;
+      {/* --- PHOTO MANAGEMENT --- */}
+      {/* --- PHOTO MANAGEMENT --- */}
 
-            return (
-              <div
-                key={photo.id}
-                className="border rounded-lg overflow-hidden shadow-sm"
-              >
-                <img
-                  src={imageUrl}
-                  alt={photo.title}
-                  className="w-full h-40 object-cover"
-                />
-                <div className="p-2">
-                  <h3 className="text-sm font-medium truncate">
-                    {photo.title}
-                  </h3>
+      {/* Category Dropdown */}
+      <div className="mb-6">
+        <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+          Select Category
+        </label>
+        <select
+          value={selectedCategory}
+          onChange={(e) => setSelectedCategory(e.target.value)}
+          className="dark:bg-gray-700 border rounded px-3 py-2 w-full md:w-1/3"
+        >
+          {categories.map((cat) => (
+            <option key={cat.id} value={cat.name}>
+              {cat.friendlyName || cat.name}
+            </option>
+          ))}
+        </select>
+      </div>
 
-                  {/* Tag Input */}
-                  <div className="mb-2">
-                    <input
-                      type="text"
-                      value={photoTagInputs[photo.id] || ""}
-                      onChange={(e) =>
-                        setPhotoTagInputs((prev) => ({
-                          ...prev,
-                          [photo.id]: e.target.value,
-                        }))
-                      }
-                      placeholder="Edit tags (comma or space separated)"
-                      className="border rounded px-2 py-1 text-sm w-full"
-                    />
-                    <button
-                      onClick={() => handleUpdateTags(photo.id)}
-                      className="mt-1 text-sm bg-blue-600 text-white px-2 py-1 rounded"
-                    >
-                      Update Tags
-                    </button>
-                  </div>
+      {/* Upload Form */}
+      <div className="flex flex-col md:flex-row items-center gap-4 mb-6">
+        <input
+          type="file"
+          accept="image/*"
+          onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+          className="border rounded px-3 py-2"
+        />
+        <input
+          type="text"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="Title"
+          className="border rounded px-3 py-2"
+        />
+        <input
+          type="text"
+          value={tags}
+          onChange={(e) => setTags(e.target.value)}
+          placeholder="Tags (comma or space separated)"
+          className="border rounded px-3 py-2"
+        />
+        <button
+          onClick={handleUpload}
+          disabled={uploading}
+          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
+        >
+          {uploading ? "Uploading..." : "Upload"}
+        </button>
+      </div>
 
-                  <div className="flex justify-between mt-2 gap-2">
-                    <button
-                      onClick={() =>
-                        handleToggleVisibility(photo.id, photo.isVisible)
-                      }
-                      className={`text-sm px-2 py-1 rounded ${
-                        photo.isVisible ? "bg-green-500" : "bg-gray-400"
-                      } text-white`}
-                    >
-                      {photo.isVisible ? "Visible" : "Hidden"}
-                    </button>
-                    <button
-                      onClick={() => handleSoftDelete(photo.id)}
-                      className="text-sm bg-yellow-500 text-white px-2 py-1 rounded"
-                    >
-                      Soft Delete
-                    </button>
-                    <button
-                      onClick={() => handleHardDelete(photo.id)}
-                      className="text-sm bg-red-600 text-white px-2 py-1 rounded"
-                    >
-                      Permanently Delete
-                    </button>
-                  </div>
+      {/* Photos Grid */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        {photos.map((photo) => {
+          const imageUrl = `${BACKEND_URL}${
+            photo.url.startsWith("/") ? "" : "/"
+          }${photo.url}`;
+
+          return (
+            <div
+              key={photo.id}
+              className="border rounded-lg overflow-hidden shadow-sm"
+            >
+              <img
+                src={imageUrl}
+                alt={photo.title}
+                className="w-full h-40 object-cover"
+              />
+              <div className="p-2">
+                <h3 className="text-sm font-medium truncate">{photo.title}</h3>
+
+                {/* Tag Input */}
+                <div className="mb-2">
+                  <input
+                    type="text"
+                    value={photoTagInputs[photo.id] || ""}
+                    onChange={(e) =>
+                      setPhotoTagInputs((prev) => ({
+                        ...prev,
+                        [photo.id]: e.target.value,
+                      }))
+                    }
+                    placeholder="Edit tags (comma or space separated)"
+                    className="border rounded px-2 py-1 text-sm w-full"
+                  />
+                  <button
+                    onClick={() => handleUpdateTags(photo.id)}
+                    className="mt-1 text-sm bg-blue-600 text-white px-2 py-1 rounded"
+                  >
+                    Update Tags
+                  </button>
+                </div>
+
+                <div className="flex justify-between mt-2 gap-2">
+                  <button
+                    onClick={() =>
+                      handleToggleVisibility(photo.id, photo.isVisible)
+                    }
+                    className={`text-sm px-2 py-1 rounded ${
+                      photo.isVisible ? "bg-green-500" : "bg-gray-400"
+                    } text-white`}
+                  >
+                    {photo.isVisible ? "Visible" : "Hidden"}
+                  </button>
+                  <button
+                    onClick={() => handleSoftDelete(photo.id)}
+                    className="text-sm bg-yellow-500 text-white px-2 py-1 rounded"
+                  >
+                    Soft Delete
+                  </button>
+                  <button
+                    onClick={() => handleHardDelete(photo.id)}
+                    className="text-sm bg-red-600 text-white px-2 py-1 rounded"
+                  >
+                    Permanently Delete
+                  </button>
                 </div>
               </div>
-            );
-          })}
-        </div>
-
-        {photos.length === 0 && selectedCategory && (
-          <p className="text-gray-500 text-center mt-6">
-            No photos uploaded for the "{selectedCategory}" category yet.
-          </p>
-        )}
+            </div>
+          );
+        })}
       </div>
+
+      {!hasMore && photos.length > 0 && (
+        <p className="text-gray-500 text-center mt-6">All photos loaded.</p>
+      )}
+
+      {photos.length === 0 && selectedCategory && (
+        <p className="text-gray-500 text-center mt-6">
+          No photos uploaded for the "{selectedCategory}" category yet.
+        </p>
+      )}
     </div>
   );
 }

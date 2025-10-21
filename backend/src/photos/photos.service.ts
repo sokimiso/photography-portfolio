@@ -136,8 +136,13 @@ export class PhotosService {
     return category;
   }
 
-  async getPhotosByCategory(categoryName: string, cursor?: string, limit = 30) {
-    // 1️⃣ Find the category
+  async getPhotosByCategory(
+    categoryName: string,
+    cursor?: string,
+    limit = 30,
+    showAll = false, // <-- new flag
+  ) {
+    // 1. Find the category
     const category = await this.prisma.photoCategory.findFirst({
       where: {
         name: categoryName,
@@ -149,27 +154,23 @@ export class PhotosService {
       throw new NotFoundException('Category not found');
     }
 
-    // 2️⃣ Fetch photos via PhotoCategoryMap (pagination + include relations)
+    // 2. Fetch photos via PhotoCategoryMap
     const photoMappings = await this.prisma.photoCategoryMap.findMany({
       where: {
         categoryId: category.id,
         photo: {
           deletedAt: null,
-          isVisible: true,
+          ...(showAll ? {} : { isVisible: true }), // only filter if not showing all
         },
       },
       include: {
         photo: {
           include: {
-            tags: {
-              include: {
-                tag: true, // includes friendlyName, name, etc.
-              },
-            },
+            tags: { include: { tag: true } },
           },
         },
       },
-      take: limit + 1, // +1 to check if there’s more
+      take: limit + 1,
       ...(cursor
         ? {
             skip: 1,
@@ -180,13 +181,11 @@ export class PhotosService {
         : {}),
     });
 
-    // 3️⃣ Map and flatten tags
     const photos = photoMappings.map((map) => ({
       ...map.photo,
       tags: map.photo.tags.map((t) => t.tag),
     }));
 
-    // 4️⃣ Determine next cursor (for infinite scroll)
     const hasMore = photos.length > limit;
     const nextCursor = hasMore ? photos[limit - 1].id : null;
 
@@ -359,5 +358,61 @@ export class PhotosService {
     });
 
     return Object.values(tagsMap);
+  }
+
+  // ------------------ Category Management ------------------
+  async createCategory(data: {
+    name: string;
+    friendlyName?: string;
+    isPublic?: boolean;
+    description?: string;
+  }) {
+    return this.prisma.photoCategory.create({ data });
+  }
+
+  async updateCategory(
+    id: string,
+    data: Partial<{
+      name: string;
+      friendlyName: string;
+      isPublic: boolean;
+      description: string;
+    }>,
+  ) {
+    return this.prisma.photoCategory.update({ where: { id }, data });
+  }
+
+  async hardDeleteCategory(id: string) {
+    // Remove all photo mappings
+    await this.prisma.photoCategoryMap.deleteMany({
+      where: { categoryId: id },
+    });
+    // Delete category itself
+    await this.prisma.photoCategory.delete({ where: { id } });
+    return { success: true };
+  }
+
+  // ------------------ Tag Management ------------------
+  async createTag(data: {
+    name: string;
+    friendlyName?: string;
+    isPublic?: boolean;
+  }) {
+    return this.prisma.photoTag.create({ data });
+  }
+
+  async updateTag(
+    id: string,
+    data: Partial<{ name: string; friendlyName: string; isPublic: boolean }>,
+  ) {
+    return this.prisma.photoTag.update({ where: { id }, data });
+  }
+
+  async hardDeleteTag(id: string) {
+    // Remove all photo mappings
+    await this.prisma.photoTagMap.deleteMany({ where: { tagId: id } });
+    // Delete tag itself
+    await this.prisma.photoTag.delete({ where: { id } });
+    return { success: true };
   }
 }

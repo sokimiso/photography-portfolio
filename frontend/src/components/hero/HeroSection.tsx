@@ -14,25 +14,20 @@ export default function HeroSection() {
   useEffect(() => {
     const fetchHeroPhotos = async () => {
       try {
+        // Fetch all hero photos from backend
         const res = await apiClient.get("/api/photos/category/hero");
-        const photos = res.data;
+        const photos = res.data.photos || res.data; // adapt to pagination shape
 
-        if (photos.length > 0) {
-          const visiblePhotos = photos.filter(
-            (p: any) => p.isVisible && !p.deletedAt
-          );
-          const pool = visiblePhotos.length > 0 ? visiblePhotos : photos;
-          const randomIndex = Math.floor(Math.random() * pool.length);
-          setBgImage(pool[randomIndex].url);
-        } else {
-          // fallback images
-          const fallback = ["/hero/photography-hero-1.jpg"];
-          const randomIndex = Math.floor(Math.random() * fallback.length);
-          setBgImage(fallback[randomIndex]);
-        }
+        // Only keep visible and not deleted photos
+        const visiblePhotos = photos.filter(
+          (p: any) => p.isVisible && !p.deletedAt
+        );
+
+        const pool = visiblePhotos.length > 0 ? visiblePhotos : photos;
+        const randomIndex = Math.floor(Math.random() * pool.length);
+        setBgImage(pool[randomIndex].url);
       } catch (err) {
         console.error("Failed to load hero images:", err);
-        // fallback if backend fails
         const fallback = ["/hero/photography-hero-1.jpg"];
         const randomIndex = Math.floor(Math.random() * fallback.length);
         setBgImage(fallback[randomIndex]);
@@ -61,10 +56,8 @@ export default function HeroSection() {
         )}
       </AnimatePresence>
 
-      {/* Overlay */}
       <div className="absolute inset-0 bg-black/10 dark:bg-black/20"></div>
 
-      {/* Hero Text */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

@@ -4,8 +4,15 @@ import axios from "axios";
 const BACKEND_URL =
   process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:4000";
 
-export const getPhotosByCategory = async (category: string) => {
+/** Fetch photos by category with optional pagination */
+export const getPhotosByCategory = async (
+  category: string,
+  page = 1,
+  limit = 30,
+  showAll = false
+) => {
   const res = await apiClient.get(`/api/photos/category/${category}`, {
+    params: { page, limit, showAll },
     withCredentials: true,
   });
   return res.data;

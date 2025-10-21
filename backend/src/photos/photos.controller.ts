@@ -76,8 +76,15 @@ export class PhotosController {
     @Param('categoryName') categoryName: string,
     @Query('cursor') cursor?: string,
     @Query('limit') limit = '30',
+    @Query('showAll') showAll?: string, // new
   ) {
-    return this.photosService.getPhotosByCategory(categoryName, cursor, +limit);
+    const showAllFlag = showAll === 'true';
+    return this.photosService.getPhotosByCategory(
+      categoryName,
+      cursor,
+      +limit,
+      showAllFlag,
+    );
   }
 
   @Get('tags')
@@ -118,5 +125,68 @@ export class PhotosController {
   @Delete(':id')
   async deletePhoto(@Param('id') id: string) {
     return this.photosService.deletePhoto(id);
+  }
+
+  // ------------------ Category Management ------------------
+
+  @UseGuards(JwtAuthGuard)
+  @Post('categories')
+  async createCategory(
+    @Body()
+    body: {
+      name: string;
+      friendlyName?: string;
+      isPublic?: boolean;
+      description?: string;
+    },
+  ) {
+    return this.photosService.createCategory(body);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Put('categories/:id')
+  async updateCategory(
+    @Param('id') id: string,
+    @Body()
+    body: Partial<{
+      name: string;
+      friendlyName?: string;
+      isPublic?: boolean;
+      description?: string;
+    }>,
+  ) {
+    return this.photosService.updateCategory(id, body);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete('categories/hard/:id')
+  async hardDeleteCategory(@Param('id') id: string) {
+    return this.photosService.hardDeleteCategory(id);
+  }
+
+  // ------------------ Tag Management ------------------
+
+  @UseGuards(JwtAuthGuard)
+  @Post('tags')
+  async createTag(
+    @Body() body: { name: string; friendlyName?: string; isPublic?: boolean },
+  ) {
+    return this.photosService.createTag(body);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Put('tags/:id')
+  async updateTag(
+    @Param('id') id: string,
+    @Body()
+    body: Partial<{ name: string; friendlyName?: string; isPublic?: boolean }>,
+  ) {
+    return this.photosService.updateTag(id, body);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete('tags/hard/:id')
+  async hardDeleteTag(@Param('id') id: string) {
+    return this.photosService.hardDeleteTag(id);
   }
 }
