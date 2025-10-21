@@ -10,6 +10,7 @@ import {
   UseInterceptors,
   UseGuards,
   Req,
+  Query,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
@@ -71,8 +72,12 @@ export class PhotosController {
   }
 
   @Get('category/:categoryName')
-  async getPhotosByCategory(@Param('categoryName') categoryName: string) {
-    return this.photosService.getPhotosByCategory(categoryName);
+  async getPhotosByCategory(
+    @Param('categoryName') categoryName: string,
+    @Query('cursor') cursor?: string,
+    @Query('limit') limit = '30',
+  ) {
+    return this.photosService.getPhotosByCategory(categoryName, cursor, +limit);
   }
 
   @Get('tags')

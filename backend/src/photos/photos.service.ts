@@ -136,37 +136,65 @@ export class PhotosService {
     return category;
   }
 
-  async getPhotosByCategory(categoryName: string) {
-    const category = await this.prisma.photoCategory.findUnique({
+  async getPhotosByCategory(categoryName: string, cursor?: string, limit = 30) {
+    // 1️⃣ Find the category
+    const category = await this.prisma.photoCategory.findFirst({
       where: {
         name: categoryName,
         deletedAt: null,
       },
+    });
+
+    if (!category) {
+      throw new NotFoundException('Category not found');
+    }
+
+    // 2️⃣ Fetch photos via PhotoCategoryMap (pagination + include relations)
+    const photoMappings = await this.prisma.photoCategoryMap.findMany({
+      where: {
+        categoryId: category.id,
+        photo: {
+          deletedAt: null,
+          isVisible: true,
+        },
+      },
       include: {
-        photos: {
+        photo: {
           include: {
-            photo: {
+            tags: {
               include: {
-                tags: {
-                  include: {
-                    tag: true,
-                  },
-                },
+                tag: true, // includes friendlyName, name, etc.
               },
             },
           },
         },
       },
+      take: limit + 1, // +1 to check if there’s more
+      ...(cursor
+        ? {
+            skip: 1,
+            cursor: {
+              photoId_categoryId: { photoId: cursor, categoryId: category.id },
+            },
+          }
+        : {}),
     });
 
-    if (!category) throw new NotFoundException('Category not found');
+    // 3️⃣ Map and flatten tags
+    const photos = photoMappings.map((map) => ({
+      ...map.photo,
+      tags: map.photo.tags.map((t) => t.tag),
+    }));
 
-    return category.photos
-      .map((map) => ({
-        ...map.photo,
-        tags: map.photo.tags.map((t) => t.tag), // flatten tag array
-      }))
-      .filter((photo) => !photo.deletedAt);
+    // 4️⃣ Determine next cursor (for infinite scroll)
+    const hasMore = photos.length > limit;
+    const nextCursor = hasMore ? photos[limit - 1].id : null;
+
+    return {
+      photos: photos.slice(0, limit),
+      nextCursor,
+      hasMore,
+    };
   }
 
   async getPhotosByTag(tagName: string) {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { motion, AnimatePresence, PanInfo } from "framer-motion";
 import Image from "next/image";
 import axios from "axios";
@@ -11,87 +11,119 @@ const BACKEND_URL =
 interface Photo {
   id: string;
   title?: string;
-  url: string; // full size
+  url: string;
   thumbnailUrl: string;
-  mediumUrl: string; // for grid
+  mediumUrl: string;
   largeUrl: string;
-  tags: { id: string; name: string }[];
+  tags: { id: string; name: string; friendlyName?: string }[];
 }
 
 export default function GalleryPageComponent() {
   const [photos, setPhotos] = useState<Photo[]>([]);
-  const [categories, setCategories] = useState<{ id: string; name: string }[]>(
-    []
-  );
-  const [tags, setTags] = useState<{ id: string; name: string }[]>([]);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+
+  const [categories, setCategories] = useState<
+    { id: string; name: string; friendlyName?: string }[]
+  >([]);
+  const [tags, setTags] = useState<
+    { id: string; name: string; friendlyName?: string }[]
+  >([]);
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [selectedTag, setSelectedTag] = useState<string>("");
+
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const [modalSrc, setModalSrc] = useState<string | null>(null);
-  const [swipeDirection, setSwipeDirection] = useState(0); // 1 = next, -1 = prev
+  const [swipeDirection, setSwipeDirection] = useState(0);
 
-  // Load categories & tags
+  const loaderRef = useRef<HTMLDivElement | null>(null);
+
+  // Load public categories
   useEffect(() => {
     const loadCategories = async () => {
-      const res = await axios.get(`${BACKEND_URL}/api/photos/categories`);
+      const res = await axios.get(`${BACKEND_URL}/api/photos/publicCategories`);
       setCategories(res.data);
       if (res.data.length > 0) setSelectedCategory(res.data[0].name);
     };
-    const loadTags = async () => {
-      const res = await axios.get(`${BACKEND_URL}/api/photos/tags`);
-      setTags(res.data);
-    };
     loadCategories();
-    loadTags();
   }, []);
 
-  // Load photos on category change
+  // Load first batch of photos + tags
   useEffect(() => {
     if (!selectedCategory) return;
-    const loadPhotos = async () => {
+
+    const loadPhotosAndTags = async () => {
       try {
-        const res = await axios.get(
-          `${BACKEND_URL}/api/photos/category/${selectedCategory}`
+        const photosRes = await axios.get(
+          `${BACKEND_URL}/api/photos/category/${selectedCategory}?limit=30`
         );
-        setPhotos(res.data);
-        setSelectedTag(""); // reset tag filter
+        setPhotos(photosRes.data.photos);
+        setNextCursor(photosRes.data.nextCursor || null);
+
+        const tagsRes = await axios.get(
+          `${BACKEND_URL}/api/photos/publicCategory/${selectedCategory}/tags`
+        );
+        setTags(tagsRes.data);
+        setSelectedTag("");
       } catch (err) {
-        console.error("Failed to load photos:", err);
+        console.error(err);
       }
     };
-    loadPhotos();
+
+    loadPhotosAndTags();
   }, [selectedCategory]);
 
-  // Filter photos by tag
+  // Infinite scroll observer
+  useEffect(() => {
+    if (!loaderRef.current || !nextCursor) return;
+
+    const observer = new IntersectionObserver(
+      async (entries) => {
+        if (entries[0].isIntersecting && !isLoadingMore) {
+          setIsLoadingMore(true);
+          try {
+            const res = await axios.get(
+              `${BACKEND_URL}/api/photos/category/${selectedCategory}?cursor=${nextCursor}&limit=30`
+            );
+            setPhotos((prev) => [...prev, ...res.data.photos]);
+            setNextCursor(res.data.nextCursor || null);
+          } catch (err) {
+            console.error(err);
+          } finally {
+            setIsLoadingMore(false);
+          }
+        }
+      },
+      { threshold: 0.5 }
+    );
+
+    observer.observe(loaderRef.current);
+    return () => observer.disconnect();
+  }, [nextCursor, selectedCategory, isLoadingMore]);
+
+  // Tag filter
   const filteredPhotos = useMemo(() => {
     if (!selectedTag) return photos;
-    return photos.filter((photo) =>
-      photo.tags.some((t) => t.name === selectedTag)
-    );
+    return photos.filter((p) => p.tags.some((t) => t.name === selectedTag));
   }, [photos, selectedTag]);
 
-  // Active photo
-  const activePhoto = useMemo(
-    () =>
-      activeIndex !== null && filteredPhotos[activeIndex]
-        ? filteredPhotos[activeIndex]
-        : null,
-    [activeIndex, filteredPhotos]
-  );
+  const activePhoto =
+    activeIndex !== null && filteredPhotos[activeIndex]
+      ? filteredPhotos[activeIndex]
+      : null;
 
-  // Load next image into modalSrc after fully loaded
+  // Preload modal image
   useEffect(() => {
     if (!activePhoto) {
       setModalSrc(null);
       return;
     }
-
     const img = new window.Image();
     img.src = `${BACKEND_URL}${activePhoto.url}`;
     img.onload = () => setModalSrc(activePhoto.url);
   }, [activePhoto]);
 
-  // ESC + arrow navigation
+  // Key navigation
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") setActiveIndex(null);
@@ -121,37 +153,14 @@ export default function GalleryPageComponent() {
     );
   };
 
-  // Preload next/prev images
-  useEffect(() => {
-    if (activeIndex === null) return;
-
-    const preloadImage = (src: string) => {
-      const img = new window.Image();
-      img.src = src;
-    };
-
-    const prevIndex =
-      activeIndex === 0 ? filteredPhotos.length - 1 : activeIndex - 1;
-    const nextIndex =
-      activeIndex === filteredPhotos.length - 1 ? 0 : activeIndex + 1;
-
-    if (filteredPhotos[prevIndex])
-      preloadImage(`${BACKEND_URL}${filteredPhotos[prevIndex].url}`);
-    if (filteredPhotos[nextIndex])
-      preloadImage(`${BACKEND_URL}${filteredPhotos[nextIndex].url}`);
-  }, [activeIndex, filteredPhotos]);
-
-  // Swipe navigation
   const handleDragEnd = useCallback(
     (_: any, info: PanInfo) => {
-      if (!filteredPhotos.length) return;
       if (info.velocity.x < -500) goNext();
       else if (info.velocity.x > 500) goPrev();
     },
     [filteredPhotos]
   );
 
-  // Framer Motion variants for swipe
   const swipeVariants = {
     enter: (direction: number) => ({
       x: direction === 1 ? 300 : -300,
@@ -182,7 +191,7 @@ export default function GalleryPageComponent() {
                 : "bg-gray-300 dark:bg-gray-700 text-gray-800 dark:text-gray-200"
             }`}
           >
-            {cat.name}
+            {(cat.friendlyName || cat.name).toLowerCase()}
           </button>
         ))}
       </div>
@@ -201,7 +210,7 @@ export default function GalleryPageComponent() {
                 : "bg-gray-300 dark:bg-gray-700 text-gray-800 dark:text-gray-200"
             }`}
           >
-            {tag.name}
+            {(tag.friendlyName || tag.name).toLowerCase()}
           </button>
         ))}
       </div>
@@ -223,11 +232,23 @@ export default function GalleryPageComponent() {
               alt={photo.title ?? "Gallery image"}
               fill
               className="object-contain"
-              loading="lazy"
+              priority={index === 0}
+              {...(index !== 0 && { loading: "lazy" })}
             />
           </div>
         ))}
       </div>
+
+      {/* Infinite scroll trigger with fade */}
+      <motion.div
+        ref={loaderRef}
+        className="text-center py-6 text-gray-400"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: isLoadingMore ? 1 : 0.5 }}
+        transition={{ duration: 0.3 }}
+      >
+        {isLoadingMore ? "Loading more..." : "Scroll to load more"}
+      </motion.div>
 
       {/* Modal */}
       <AnimatePresence initial={false} custom={swipeDirection}>
@@ -235,9 +256,6 @@ export default function GalleryPageComponent() {
           <motion.div
             key={activePhoto.id}
             className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-4"
-            initial={{ opacity: 1 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 1 }}
           >
             <motion.div
               className="relative w-full h-full flex items-center justify-center"
@@ -246,23 +264,18 @@ export default function GalleryPageComponent() {
               dragElastic={0.25}
               onDragEnd={handleDragEnd}
             >
-              {/* Close */}
               <button
                 onClick={() => setActiveIndex(null)}
                 className="absolute top-4 right-4 text-white text-3xl font-bold z-50"
               >
                 &times;
               </button>
-
-              {/* Left arrow */}
               <button
                 onClick={goPrev}
                 className="absolute left-2 top-1/2 -translate-y-1/2 text-white text-4xl z-50"
               >
                 &#10094;
               </button>
-
-              {/* Right arrow */}
               <button
                 onClick={goNext}
                 className="absolute right-2 top-1/2 -translate-y-1/2 text-white text-4xl z-50"
@@ -270,7 +283,6 @@ export default function GalleryPageComponent() {
                 &#10095;
               </button>
 
-              {/* Fullscreen Image with swipe */}
               <motion.div
                 key={modalSrc}
                 custom={swipeDirection}
@@ -286,6 +298,7 @@ export default function GalleryPageComponent() {
                   alt={activePhoto.title ?? "Gallery image"}
                   fill
                   className="object-contain select-none"
+                  sizes="100vw"
                   priority
                 />
               </motion.div>
