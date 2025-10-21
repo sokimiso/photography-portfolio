@@ -2,10 +2,13 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   eslint: {
-    ignoreDuringBuilds: true, // Skip lint errors in production build
+    ignoreDuringBuilds: true,
   },
   typescript: {
-    ignoreBuildErrors: true, // Skip TS errors in production build
+    ignoreBuildErrors: true,
+  },
+  images: {
+    domains: ["localhost", "127.0.0.1", "sokirka.com", "www.sokirka.com"],
   },
 };
 

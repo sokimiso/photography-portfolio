@@ -275,4 +275,61 @@ export class PhotosService {
       create: { name },
     });
   }
+
+  async getAllPublicCategoriesWithPhotos() {
+    const categories = await this.prisma.photoCategory.findMany({
+      where: {
+        isPublic: true,
+        deletedAt: null,
+        photos: {
+          some: {
+            photo: {
+              isVisible: true,
+              deletedAt: null,
+            },
+          },
+        },
+      },
+      orderBy: { name: 'asc' },
+    });
+
+    return categories;
+  }
+
+  async getPublicTagsForCategory(categoryName: string) {
+    const category = await this.prisma.photoCategory.findUnique({
+      where: { name: categoryName },
+      include: {
+        photos: {
+          where: {
+            photo: { isVisible: true, deletedAt: null },
+          },
+          include: {
+            photo: {
+              include: {
+                tags: {
+                  where: {
+                    tag: { isPublic: true, deletedAt: null },
+                  },
+                  include: { tag: true },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!category) return [];
+
+    // Extract unique tags
+    const tagsMap: Record<string, { id: string; name: string }> = {};
+    category.photos.forEach((map) => {
+      map.photo.tags.forEach((t) => {
+        tagsMap[t.tag.id] = { id: t.tag.id, name: t.tag.name };
+      });
+    });
+
+    return Object.values(tagsMap);
+  }
 }

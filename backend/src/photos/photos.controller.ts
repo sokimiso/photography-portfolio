@@ -85,6 +85,16 @@ export class PhotosController {
     return this.photosService.getPhotosByTag(tagName);
   }
 
+  @Get('publicCategories')
+  async getAllPublicCategories() {
+    return this.photosService.getAllPublicCategoriesWithPhotos();
+  }
+
+  @Get('publicCategory/:categoryName/tags')
+  async getTagsForCategory(@Param('categoryName') categoryName: string) {
+    return this.photosService.getPublicTagsForCategory(categoryName);
+  }
+
   @UseGuards(JwtAuthGuard)
   @Put(':id/visibility')
   async toggleVisibility(

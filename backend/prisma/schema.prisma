@@ -163,6 +163,8 @@ model Photo {
 model PhotoCategory {
   id          String   @id @default(uuid())
   name        String   @unique
+  friendlyName        String?   @unique
+  isPublic    Boolean?  @default(false)
   description String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -177,6 +179,8 @@ model PhotoCategory {
 model PhotoTag {
   id        String   @id @default(uuid())
   name      String   @unique
+  friendlyName        String?   @unique
+  isPublic    Boolean?  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   deletedAt DateTime?

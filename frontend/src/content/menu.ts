@@ -9,7 +9,7 @@ export interface MenuItem {
   label: string;
   href?: string;
   subItems?: SubMenuItem[];
-  onClick?: () => void; // click handler (logout)  
+  onClick?: () => void; // click handler (logout)
 }
 
 /**
@@ -20,7 +20,10 @@ export const createMenuItems = (texts: Texts): MenuItem[] => {
     {
       label: texts.menu.services,
       subItems: [
-        { label: texts.menu.servicesSub.portraits, href: "/services/portraits" },
+        {
+          label: texts.menu.servicesSub.portraits,
+          href: "/services/portraits",
+        },
         { label: texts.menu.servicesSub.school, href: "/services/school" },
         { label: texts.menu.servicesSub.home, href: "/services/home" },
         { label: texts.menu.servicesSub.weddings, href: "/services/weddings" },
@@ -28,11 +31,7 @@ export const createMenuItems = (texts: Texts): MenuItem[] => {
     },
     {
       label: texts.menu.gallery,
-      subItems: [
-        { label: texts.menu.gallerySub.children, href: "/gallery/children" },
-        { label: texts.menu.gallerySub.school, href: "/gallery/school" },
-        { label: texts.menu.gallerySub.weddings, href: "/gallery/weddings" },
-      ],
+      href: "/gallery",
     },
     { label: texts.menu.customerZone, href: "/login" },
   ];
