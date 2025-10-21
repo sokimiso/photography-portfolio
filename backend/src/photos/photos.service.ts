@@ -1,8 +1,13 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { promises as fs } from 'fs';
 import { join } from 'path';
 import slugify from 'slugify';
+import { generateResponsiveImages } from '../utils/photos.utils';
 
 @Injectable()
 export class PhotosService {
@@ -16,72 +21,103 @@ export class PhotosService {
     categories?: string,
     tags?: string,
   ) {
-    if (!file) throw new Error('No file uploaded');
+    if (!file) throw new InternalServerErrorException('No file uploaded');
 
-    // Normalize category
     const categoryName = categories?.trim() || 'uncategorized';
     const safeCategory = slugify(categoryName, { lower: true, strict: true });
 
-    // Define source and target paths
-    const tmpPath = file.path; // uploaded to tmp by Multer
-    const targetDir = join(process.cwd(), 'public', safeCategory);
-    const targetPath = join(targetDir, file.filename);
+    // Directories
+    const categoryDir = join(process.cwd(), 'public', safeCategory);
+    const tmpDir = join(process.cwd(), 'public', 'tmp');
 
-    // Ensure category folder exists
     try {
-      await fs.mkdir(targetDir, { recursive: true });
+      await fs.mkdir(categoryDir, { recursive: true });
+      await fs.mkdir(tmpDir, { recursive: true });
+
+      // Move original file from Multer tmp to category folder
+      const targetPath = join(categoryDir, file.filename);
+      await fs.rename(file.path, targetPath);
+
+      // Generate responsive images in temp folder
+      const tempSizes = await generateResponsiveImages(
+        targetPath,
+        tmpDir,
+        file.filename,
+      );
+
+      // Move generated images to final category folders
+      const thumbsDir = join(categoryDir, 'thumbs');
+      const mediumDir = join(categoryDir, 'medium');
+      const largeDir = join(categoryDir, 'large');
+
+      await fs.mkdir(thumbsDir, { recursive: true });
+      await fs.mkdir(mediumDir, { recursive: true });
+      await fs.mkdir(largeDir, { recursive: true });
+
+      const finalThumbnailPath = join(thumbsDir, file.filename);
+      const finalMediumPath = join(mediumDir, file.filename);
+      const finalLargePath = join(largeDir, file.filename);
+
+      await fs.rename(tempSizes.thumbnail, finalThumbnailPath);
+      await fs.rename(tempSizes.medium, finalMediumPath);
+      await fs.rename(tempSizes.large, finalLargePath);
+
+      // Store photo with URLs in DB
+      const photo = await this.prisma.photo.create({
+        data: {
+          url: `/public/${safeCategory}/${file.filename}`,
+          thumbnailUrl: `/public/${safeCategory}/thumbs/${file.filename}`,
+          mediumUrl: `/public/${safeCategory}/medium/${file.filename}`,
+          largeUrl: `/public/${safeCategory}/large/${file.filename}`,
+          title,
+          description,
+          uploadedBy,
+        },
+      });
+
+      // Handle category mappings
+      const categoryNames = categoryName.split(',').map((c) => c.trim());
+      for (const name of categoryNames) {
+        const category = await this.prisma.photoCategory.upsert({
+          where: { name },
+          update: {},
+          create: { name },
+        });
+        await this.prisma.photoCategoryMap.create({
+          data: { photoId: photo.id, categoryId: category.id },
+        });
+      }
+
+      // Handle tag mappings
+      const tagNames = tags
+        ? tags
+            .split(/[,\s]+/)
+            .map((t) => t.trim())
+            .filter(Boolean)
+        : [];
+      for (const name of tagNames) {
+        const tag = await this.prisma.photoTag.upsert({
+          where: { name },
+          update: {},
+          create: { name },
+        });
+        await this.prisma.photoTagMap.create({
+          data: { photoId: photo.id, tagId: tag.id },
+        });
+      }
+
+      return photo;
     } catch (err) {
-      console.error('Error creating category folder', err);
-      throw err;
+      // Cleanup any partially created files
+      console.error('Upload failed:', err);
+      try {
+        await fs.unlink(file.path).catch(() => {});
+      } catch {}
+      try {
+        await fs.unlink(join(categoryDir, file.filename)).catch(() => {});
+      } catch {}
+      throw new InternalServerErrorException('Failed to upload photo');
     }
-
-    // Move file from tmp to category folder
-    try {
-      await fs.rename(tmpPath, targetPath);
-    } catch (err) {
-      console.error('Error moving file to category folder', err);
-      throw err;
-    }
-
-    // Store the relative URL in DB
-    const url = `/public/${safeCategory}/${file.filename}`;
-
-    const photo = await this.prisma.photo.create({
-      data: {
-        url,
-        title,
-        description,
-        uploadedBy,
-      },
-    });
-
-    // Handle categories and tags mapping
-    const categoryNames = categoryName.split(',').map((c) => c.trim());
-    const tagNames = tags ? tags.split(',').map((t) => t.trim()) : [];
-
-    for (const name of categoryNames) {
-      const category = await this.prisma.photoCategory.upsert({
-        where: { name },
-        update: {},
-        create: { name },
-      });
-      await this.prisma.photoCategoryMap.create({
-        data: { photoId: photo.id, categoryId: category.id },
-      });
-    }
-
-    for (const name of tagNames) {
-      const tag = await this.prisma.photoTag.upsert({
-        where: { name },
-        update: {},
-        create: { name },
-      });
-      await this.prisma.photoTagMap.create({
-        data: { photoId: photo.id, tagId: tag.id },
-      });
-    }
-
-    return photo;
   }
 
   async getAllCategories() {
@@ -106,25 +142,59 @@ export class PhotosService {
         name: categoryName,
         deletedAt: null,
       },
-      include: { photos: { include: { photo: true } } }, // include related photos
+      include: {
+        photos: {
+          include: {
+            photo: {
+              include: {
+                tags: {
+                  include: {
+                    tag: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
     });
 
     if (!category) throw new NotFoundException('Category not found');
 
     return category.photos
-      .map((map) => map.photo)
+      .map((map) => ({
+        ...map.photo,
+        tags: map.photo.tags.map((t) => t.tag), // flatten tag array
+      }))
       .filter((photo) => !photo.deletedAt);
   }
 
   async getPhotosByTag(tagName: string) {
     const tag = await this.prisma.photoTag.findUnique({
       where: { name: tagName },
-      include: { photos: { include: { photo: true } } },
+      include: {
+        photos: {
+          include: {
+            photo: {
+              include: {
+                tags: {
+                  include: {
+                    tag: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
     });
 
     if (!tag) throw new NotFoundException('Tag not found');
 
-    return tag.photos.map((map) => map.photo);
+    return tag.photos.map((map) => ({
+      ...map.photo,
+      tags: map.photo.tags.map((t) => t.tag),
+    }));
   }
 
   async toggleVisibility(id: string, isVisible: boolean) {
@@ -167,17 +237,22 @@ export class PhotosService {
     await this.prisma.photoTagMap.deleteMany({ where: { photoId: id } });
     await this.prisma.photoCategoryMap.deleteMany({ where: { photoId: id } });
 
-    // Delete the file from disk
-    if (photo.url) {
+    // Delete all image files from disk
+    const urlsToDelete = [
+      photo.url,
+      photo.thumbnailUrl,
+      photo.mediumUrl,
+      photo.largeUrl,
+    ].filter(Boolean) as string[];
+
+    for (const url of urlsToDelete) {
       // Remove leading slash if present
-      const relativePath = photo.url.startsWith('/')
-        ? photo.url.slice(1)
-        : photo.url;
+      const relativePath = url.startsWith('/') ? url.slice(1) : url;
       const filePath = join(process.cwd(), relativePath);
       try {
         await fs.unlink(filePath);
       } catch (err) {
-        console.warn('File not found on disk:', filePath);
+        console.warn('File not found on disk, skipping:', filePath);
       }
     }
 

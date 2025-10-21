@@ -176,7 +176,7 @@ export default function ManageWebComponent() {
           />
           <input
             type="text"
-            value={tags}
+            value={selectedCategory}
             onChange={(e) => setTags(e.target.value)}
             placeholder="Tags (comma or space separated)"
             className="border rounded px-3 py-2"

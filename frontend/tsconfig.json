@@ -18,7 +18,7 @@
         "name": "next"
       }
     ],
-    "baseUrl": ".",             // Needed for clean paths
+    "baseUrl": ".", // Needed for clean paths
     "paths": {
       "@/*": ["./src/*"],
 
@@ -34,9 +34,10 @@
       "@animations/*": ["./src/animations/*"],
       "@content/*": ["./src/content/*"],
       "@styles/*": ["./src/styles/*"],
+      "@types": ["./src/types/index.ts"],
       "@types/*": ["./src/types/*"],
       "@hero/*": ["./src/components/hero/*"],
-      "@about/*": ["./src/components/about/*"],
+      "@about/*": ["./src/components/about/*"]
     }
   },
   "include": [
@@ -44,7 +45,7 @@
     "**/*.ts",
     "**/*.tsx",
     "**/*.css",
-    ".next/types/**/*.ts",
+    ".next/types/**/*.ts"
   ],
   "exclude": ["node_modules"]
 }

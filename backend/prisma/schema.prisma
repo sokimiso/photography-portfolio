@@ -138,7 +138,10 @@ model OrderStatusHistory {
 
 model Photo {
   id          String   @id @default(uuid())
-  url         String
+  url           String             // original full-size image
+  thumbnailUrl  String?            // small thumbnail for gallery
+  mediumUrl     String?            // medium size (optional)
+  largeUrl      String?            // large size (optional)
   title       String?
   description String?
   isPublic    Boolean  @default(false)
