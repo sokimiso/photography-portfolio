@@ -61,7 +61,7 @@ export default function GalleryPageComponent() {
     const loadPhotosAndTags = async () => {
       try {
         const photosRes = await axios.get(
-          `${BACKEND_URL}/api/photos/category/${selectedCategory}?limit=30`
+          `${BACKEND_URL}/api/photos/category/${selectedCategory}?limit=1`
         );
         setPhotos(photosRes.data.photos);
         setNextCursor(photosRes.data.nextCursor || null);
@@ -89,7 +89,7 @@ export default function GalleryPageComponent() {
           setIsLoadingMore(true);
           try {
             const res = await axios.get(
-              `${BACKEND_URL}/api/photos/category/${selectedCategory}?cursor=${nextCursor}&limit=30`
+              `${BACKEND_URL}/api/photos/category/${selectedCategory}?cursor=${nextCursor}&limit=8`
             );
             setPhotos((prev) => [...prev, ...res.data.photos]);
             setNextCursor(res.data.nextCursor || null);
@@ -125,8 +125,8 @@ export default function GalleryPageComponent() {
       return;
     }
     const img = new window.Image();
-    img.src = `${BACKEND_URL}${activePhoto.url}`;
-    img.onload = () => setModalSrc(activePhoto.url);
+    img.src = `${BACKEND_URL}${activePhoto.largeUrl}`;
+    img.onload = () => setModalSrc(activePhoto.largeUrl);
   }, [activePhoto]);
 
   // Key navigation
@@ -181,7 +181,7 @@ export default function GalleryPageComponent() {
 
   return (
     <section className="px-4 sm:px-6 lg:px-8 w-full bg-background-light dark:bg-background-dark">
-      <h2 className="text-3xl sm:text-4xl font-heading font-bold mb-8 text-center text-foreground">
+      <h2 className="text-xl sm:text-2xl font-heading font-normal text-left text-foreground">
         Galéria
       </h2>
 
@@ -222,22 +222,29 @@ export default function GalleryPageComponent() {
       </div>
 
       {/* Gallery grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
+      <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {filteredPhotos.map((photo, index) => {
           const aspectRatio = ratios[photo.id];
           const objectPosition =
             aspectRatio && aspectRatio < 1 ? "center 25%" : "center center";
 
           return (
-            <div
+            <motion.div
               key={photo.id}
-              className="w-full max-w-full h-80 overflow-hidden rounded-lg cursor-pointer relative"
+              className="w-full max-w-full h-80 overflow-hidden rounded-lg cursor-pointer relative shadow-2xl"
               onClick={() => setActiveIndex(index)}
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{
+                delay: index * 0.05,
+                duration: 0.4,
+                ease: "easeOut",
+              }}
             >
               <Image
                 src={
                   photo.mediumUrl
-                    ? `${BACKEND_URL}${photo.mediumUrl}`
+                    ? `${BACKEND_URL}${photo.thumbnailUrl}`
                     : "/placeholder.jpg"
                 }
                 alt={photo.title ?? "Gallery image"}
@@ -251,24 +258,32 @@ export default function GalleryPageComponent() {
                     e.currentTarget.naturalHeight
                   )
                 }
+                sizes="
+                  (max-width: 640px) 100vw,
+                  (max-width: 1024px) 50vw,
+                  (max-width: 1280px) 33vw,
+                  25vw
+                "
                 priority={index === 0}
                 {...(index !== 0 && { loading: "lazy" })}
               />
-            </div>
+            </motion.div>
           );
         })}
       </div>
 
       {/* Infinite scroll trigger with fade */}
-      <motion.div
-        ref={loaderRef}
-        className="text-center py-6 text-gray-400"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: isLoadingMore ? 1 : 0.5 }}
-        transition={{ duration: 0.3 }}
-      >
-        {isLoadingMore ? "Loading more..." : "Scroll to load more"}
-      </motion.div>
+      {nextCursor && (
+        <motion.div
+          ref={loaderRef}
+          className="text-center py-6 text-gray-400"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: isLoadingMore ? 1 : 0.5 }}
+          transition={{ duration: 0.3 }}
+        >
+          {isLoadingMore ? "Loading more..." : "Scroll to load more"}
+        </motion.div>
+      )}
 
       {/* Modal */}
       <AnimatePresence initial={false} custom={swipeDirection}>
@@ -318,7 +333,11 @@ export default function GalleryPageComponent() {
                   alt={activePhoto.title ?? "Gallery image"}
                   fill
                   className="object-contain select-none"
-                  sizes="100vw"
+                  sizes="
+                    (max-width: 768px) 100vw,
+                    (max-width: 1280px) 80vw,
+                    90vw
+                  "
                   priority
                 />
               </motion.div>

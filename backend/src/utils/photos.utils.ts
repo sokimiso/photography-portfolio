@@ -9,7 +9,7 @@ interface ImageSizes {
 }
 
 /**
- * Generates responsive images (thumbnail, medium, large) from an original file.
+ * Generates responsive images (thumbnail, medium, large) optimized for retina and Next.js usage.
  * @param originalPath Path to the original uploaded image
  * @param tempDir Temporary folder to generate resized images
  * @param filename Filename of the image
@@ -33,22 +33,22 @@ export async function generateResponsiveImages(
   const mediumPath = join(mediumDir, filename);
   const largePath = join(largeDir, filename);
 
-  // Generate thumbnail (300px width)
+  // Thumbnail — fast-loading grid preview
   await sharp(originalPath)
-    .resize({ width: 300 })
-    .webp({ quality: 80 })
+    .resize({ width: 480 }) // good for mobile + retina
+    .webp({ quality: 75 })
     .toFile(thumbPath);
 
-  // Medium (600px width)
+  // Medium — main gallery image (Next.js handles DPR)
   await sharp(originalPath)
-    .resize({ width: 600 })
-    .webp({ quality: 85 })
+    .resize({ width: 1280 }) // good balance for 2x retina mid-size
+    .webp({ quality: 80 })
     .toFile(mediumPath);
 
-  // Large (1200px width)
+  // Large — fullscreen modal / high-DPI retina displays
   await sharp(originalPath)
-    .resize({ width: 1200 })
-    .webp({ quality: 90 })
+    .resize({ width: 2560 }) // covers 4K screens crisply
+    .webp({ quality: 85 })
     .toFile(largePath);
 
   return {

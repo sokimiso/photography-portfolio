@@ -11,6 +11,7 @@ import {
   hardDeletePhoto,
   updatePhotoTags,
   updatePhotoTitle,
+  togglePhotoFeatured,
 } from "@lib/api";
 
 export default function ManageWebComponent() {
@@ -183,26 +184,31 @@ export default function ManageWebComponent() {
 
   const handleToggleVisibility = async (id: string, current: boolean) => {
     await togglePhotoVisibility(id, !current);
-    setPage(1);
-    setPhotos([]);
-    loadPhotos(selectedCategory, 1, false);
+    setPhotos((prev) =>
+      prev.map((photo) =>
+        photo.id === id ? { ...photo, isVisible: !current } : photo
+      )
+    );
+  };
+
+  const handleToggleFeatured = async (id: string, current: boolean) => {
+    await togglePhotoFeatured(id, !current);
+    setPhotos((prev) =>
+      prev.map((photo) =>
+        photo.id === id ? { ...photo, isFeatured: !current } : photo
+      )
+    );
   };
 
   const handleSoftDelete = async (id: string) => {
     await deletePhoto(id);
-    setPage(1);
-    setPhotos([]);
-    loadPhotos(selectedCategory, 1, false);
-    loadAllCategoriesAndTags();
+    setPhotos((prev) => prev.filter((p) => p.id !== id));
   };
 
   const handleHardDelete = async (id: string) => {
     if (!confirm("Permanently delete this photo?")) return;
     await hardDeletePhoto(id);
-    setPage(1);
-    setPhotos([]);
-    loadPhotos(selectedCategory, 1, false);
-    loadAllCategoriesAndTags();
+    setPhotos((prev) => prev.filter((p) => p.id !== id));
   };
 
   const handleUpdateTags = async (photoId: string) => {
@@ -210,12 +216,21 @@ export default function ManageWebComponent() {
       .split(/[,\s]+/)
       .map((t) => t.trim())
       .filter(Boolean);
+
     try {
       await updatePhotoTags(photoId, tagsArray);
-      setPage(1);
-      setPhotos([]);
+
+      // Update only the affected photo in place
+      setPhotos((prev) =>
+        prev.map((photo) =>
+          photo.id === photoId
+            ? { ...photo, tags: tagsArray.map((name) => ({ name })) }
+            : photo
+        )
+      );
+
+      // Refresh categories/tags
       loadAllCategoriesAndTags();
-      loadPhotos(selectedCategory, 1, false);
     } catch (err) {
       console.error(err);
     }
@@ -223,8 +238,18 @@ export default function ManageWebComponent() {
 
   const handleUpdateTitle = async (photoId: string) => {
     const newTitle = photoTitleInputs[photoId];
-    await updatePhotoTitle(photoId, newTitle);
-    loadPhotos(selectedCategory, 1, false); // refresh grid
+    try {
+      await updatePhotoTitle(photoId, newTitle);
+
+      // Update only the affected photo in place
+      setPhotos((prev) =>
+        prev.map((photo) =>
+          photo.id === photoId ? { ...photo, title: newTitle } : photo
+        )
+      );
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const toggleCategoryManager = () => setShowCategoryManager((prev) => !prev);
@@ -739,6 +764,16 @@ export default function ManageWebComponent() {
                       } text-white`}
                     >
                       {photo.isVisible ? "Visible" : "Hidden"}
+                    </button>
+                    <button
+                      onClick={() =>
+                        handleToggleFeatured(photo.id, photo.isFeatured)
+                      }
+                      className={`text-sm px-2 py-1 rounded ${
+                        photo.isFeatured ? "bg-green-500" : "bg-gray-400"
+                      } text-white`}
+                    >
+                      {photo.isFeatured ? "Featured" : "Not featured"}
                     </button>
                     <button
                       onClick={() => handleSoftDelete(photo.id)}

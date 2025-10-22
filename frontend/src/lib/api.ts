@@ -37,6 +37,15 @@ export const uploadPhoto = async (formData: FormData) => {
   return res.data;
 };
 
+export const togglePhotoFeatured = async (id: string, isVisible: boolean) => {
+  const res = await apiClient.put(
+    `/api/photos/${id}/featured`,
+    { isVisible },
+    { withCredentials: true }
+  );
+  return res.data;
+};
+
 export const togglePhotoVisibility = async (id: string, isVisible: boolean) => {
   const res = await apiClient.put(
     `/api/photos/${id}/visibility`,

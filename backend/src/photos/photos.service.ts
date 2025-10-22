@@ -231,6 +231,13 @@ export class PhotosService {
     });
   }
 
+  async toggleFeatured(id: string, isFeatured: boolean) {
+    return this.prisma.photo.update({
+      where: { id },
+      data: { isFeatured },
+    });
+  }
+
   async updatePhotoTags(photoId: string, tags: string[]) {
     // Remove old mappings
     await this.prisma.photoTagMap.deleteMany({ where: { photoId } });

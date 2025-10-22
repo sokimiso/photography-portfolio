@@ -118,6 +118,15 @@ export class PhotosController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Put(':id/featured')
+  async toggleFeatured(
+    @Param('id') id: string,
+    @Body('isVisible') isVisible: boolean,
+  ) {
+    return this.photosService.toggleFeatured(id, isVisible);
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Put(':id/tags')
   async updateTags(@Param('id') id: string, @Body('tags') tags: string[]) {
     return this.photosService.updatePhotoTags(id, tags);
