@@ -247,20 +247,28 @@ export default function ManageWebComponent() {
     try {
       await Promise.all(
         allCategories.map((cat) =>
-          axios.put(`${BACKEND_URL}/api/photos/categories/${cat.id}`, {
-            name: cat.name,
-            friendlyName: cat.friendlyName,
-            isPublic: cat.isPublic,
-          })
+          axios.put(
+            `${BACKEND_URL}/api/photos/categories/${cat.id}`,
+            {
+              name: cat.name,
+              friendlyName: cat.friendlyName,
+              isPublic: cat.isPublic,
+            },
+            { withCredentials: true }
+          )
         )
       );
       await Promise.all(
         allTags.map((tag) =>
-          axios.put(`${BACKEND_URL}/api/photos/tags/${tag.id}`, {
-            name: tag.name,
-            friendlyName: tag.friendlyName,
-            isPublic: tag.isPublic,
-          })
+          axios.put(
+            `${BACKEND_URL}/api/photos/tags/${tag.id}`,
+            {
+              name: tag.name,
+              friendlyName: tag.friendlyName,
+              isPublic: tag.isPublic,
+            },
+            { withCredentials: true }
+          )
         )
       );
       alert("Categories and tags updated successfully!");
@@ -276,7 +284,9 @@ export default function ManageWebComponent() {
   const softDeleteCategory = async (id: string) => {
     if (!confirm("Soft delete this category?")) return;
     try {
-      await axios.delete(`${BACKEND_URL}/api/photos/category/${id}`);
+      await axios.delete(`${BACKEND_URL}/api/photos/categories/${id}`, {
+        withCredentials: true,
+      });
       loadAllCategoriesAndTags();
       loadCategories();
     } catch (err) {
@@ -290,7 +300,10 @@ export default function ManageWebComponent() {
     )
       return;
     try {
-      await axios.delete(`${BACKEND_URL}/api/photos/category/hard/${cat.id}`);
+      await axios.delete(
+        `${BACKEND_URL}/api/photos/categories/hard/${cat.id}`,
+        { withCredentials: true }
+      );
       loadAllCategoriesAndTags();
       loadCategories();
       if (cat.name === selectedCategory) setSelectedCategory("");
@@ -302,7 +315,9 @@ export default function ManageWebComponent() {
   const softDeleteTag = async (id: string) => {
     if (!confirm("Soft delete this tag?")) return;
     try {
-      await axios.delete(`${BACKEND_URL}/api/photos/tag/${id}`);
+      await axios.delete(`${BACKEND_URL}/api/photos/tags/${id}`, {
+        withCredentials: true,
+      });
       loadAllCategoriesAndTags();
     } catch (err) {
       console.error(err);
@@ -313,7 +328,9 @@ export default function ManageWebComponent() {
     if (!confirm("Permanently delete this tag and all its photo mappings?"))
       return;
     try {
-      await axios.delete(`${BACKEND_URL}/api/photos/tag/hard/${id}`);
+      await axios.delete(`${BACKEND_URL}/api/photos/tags/hard/${id}`, {
+        withCredentials: true,
+      });
       loadAllCategoriesAndTags();
     } catch (err) {
       console.error(err);
@@ -325,14 +342,17 @@ export default function ManageWebComponent() {
       <Breadcrumb path={path} />
 
       {/* --- CATEGORY / TAG MANAGEMENT --- */}
-      <div className="bg-white dark:bg-gray-900 p-4 rounded-2xl shadow space-y-4">
+      <div className="bg-white dark:bg-gray-600 bg-transparent p-4 rounded-2xl shadow space-y-4">
         {/* Category Manager */}
         <div>
+          <h2 className="text-xl p-2 gap-2 py-2">
+            Category and Tag Management
+          </h2>
           <button
             onClick={toggleCategoryManager}
             className="w-full text-left font-semibold py-2 px-3 bg-gray-200 dark:bg-gray-700 rounded"
           >
-            Category Management {showCategoryManager ? "▲" : "▼"}
+            Categories {showCategoryManager ? "▲" : "▼"}
           </button>
           {showCategoryManager && (
             <div className="overflow-x-auto mt-2 space-y-2">
@@ -342,14 +362,14 @@ export default function ManageWebComponent() {
                   type="text"
                   value={newCategoryName}
                   placeholder="New category name"
-                  className="border px-2 py-1"
+                  className=" bg-gray-200 text-gray-600 dark:bg-gray-800 dark:text-gray-300 px-2 py-1"
                   onChange={(e) => setNewCategoryName(e.target.value)}
                 />
                 <input
                   type="text"
                   value={newCategoryFriendly}
                   placeholder="Friendly name (optional)"
-                  className="border px-2 py-1"
+                  className="bg-gray-200 text-gray-600 dark:bg-gray-800 dark:text-gray-300 px-2 py-1"
                   onChange={(e) => setNewCategoryFriendly(e.target.value)}
                 />
                 <label className="flex items-center gap-1">
@@ -369,7 +389,7 @@ export default function ManageWebComponent() {
               </div>
 
               {/* Editable Categories Table */}
-              <table className="w-full text-sm border">
+              <table className="text-left w-full text-sm bg-gray-200 text-gray-600 dark:bg-gray-800 dark:text-gray-300">
                 <thead>
                   <tr className="bg-gray-100 dark:bg-gray-800">
                     <th className="px-2 py-1">Name</th>
@@ -380,12 +400,12 @@ export default function ManageWebComponent() {
                 </thead>
                 <tbody>
                   {allCategories.map((cat, idx) => (
-                    <tr key={cat.id} className="border-b">
+                    <tr key={cat.id} className="border-t">
                       <td className="px-2 py-1">
                         <input
                           type="text"
                           value={cat.name}
-                          className="border px-1 py-0.5 w-full"
+                          className="bg-gray-200 text-gray-600 dark:bg-gray-800 dark:text-gray-300 px-1 py-0.5 w-full"
                           onChange={(e) =>
                             setAllCategories((prev) => {
                               const updated = [...prev];
@@ -399,7 +419,7 @@ export default function ManageWebComponent() {
                         <input
                           type="text"
                           value={cat.friendlyName || ""}
-                          className="border px-1 py-0.5 w-full"
+                          className="bg-gray-200 text-gray-600 dark:bg-gray-800 dark:text-gray-300 px-1 py-0.5 w-full"
                           onChange={(e) =>
                             setAllCategories((prev) => {
                               const updated = [...prev];
@@ -409,7 +429,7 @@ export default function ManageWebComponent() {
                           }
                         />
                       </td>
-                      <td className="px-2 py-1 text-center">
+                      <td className="px-2 py-1 text-left">
                         <input
                           type="checkbox"
                           checked={cat.isPublic || false}
@@ -450,7 +470,7 @@ export default function ManageWebComponent() {
             onClick={toggleTagManager}
             className="w-full text-left font-semibold py-2 px-3 bg-gray-200 dark:bg-gray-700 rounded"
           >
-            Tag Management {showTagManager ? "▲" : "▼"}
+            Tags {showTagManager ? "▲" : "▼"}
           </button>
           {showTagManager && (
             <div className="overflow-x-auto mt-2 space-y-2">
@@ -460,14 +480,14 @@ export default function ManageWebComponent() {
                   type="text"
                   value={newTagName}
                   placeholder="New tag name"
-                  className="border px-2 py-1"
+                  className="bg-gray-200 text-gray-600 dark:bg-gray-800 dark:text-gray-300 px-2 py-1"
                   onChange={(e) => setNewTagName(e.target.value)}
                 />
                 <input
                   type="text"
                   value={newTagFriendly}
                   placeholder="Friendly name (optional)"
-                  className="border px-2 py-1"
+                  className="bg-gray-200 text-gray-600 dark:bg-gray-800 dark:text-gray-300 px-2 py-1"
                   onChange={(e) => setNewTagFriendly(e.target.value)}
                 />
                 <label className="flex items-center gap-1">
@@ -487,7 +507,7 @@ export default function ManageWebComponent() {
               </div>
 
               {/* Editable Tags Table */}
-              <table className="w-full text-sm border">
+              <table className="text-left w-full text-sm bg-gray-200 text-gray-600 dark:bg-gray-800 dark:text-gray-300">
                 <thead>
                   <tr className="bg-gray-100 dark:bg-gray-800">
                     <th className="px-2 py-1">Name</th>
@@ -498,12 +518,12 @@ export default function ManageWebComponent() {
                 </thead>
                 <tbody>
                   {allTags.map((tag, idx) => (
-                    <tr key={tag.id} className="border-b">
+                    <tr key={tag.id} className="border-t">
                       <td className="px-2 py-1">
                         <input
                           type="text"
                           value={tag.name}
-                          className="border px-1 py-0.5 w-full"
+                          className="bg-gray-200 text-gray-600 dark:bg-gray-800 dark:text-gray-300 px-1 py-0.5 w-full"
                           onChange={(e) =>
                             setAllTags((prev) => {
                               const updated = [...prev];
@@ -517,7 +537,7 @@ export default function ManageWebComponent() {
                         <input
                           type="text"
                           value={tag.friendlyName || ""}
-                          className="border px-1 py-0.5 w-full"
+                          className="bg-gray-200 text-gray-600 dark:bg-gray-800 dark:text-gray-300 px-1 py-0.5 w-full"
                           onChange={(e) =>
                             setAllTags((prev) => {
                               const updated = [...prev];
@@ -527,7 +547,7 @@ export default function ManageWebComponent() {
                           }
                         />
                       </td>
-                      <td className="px-2 py-1 text-center">
+                      <td className="px-2 py-1 text-left">
                         <input
                           type="checkbox"
                           checked={tag.isPublic || false}
@@ -573,7 +593,6 @@ export default function ManageWebComponent() {
         </div>
       </div>
 
-      {/* --- PHOTO MANAGEMENT --- */}
       {/* --- PHOTO MANAGEMENT --- */}
 
       {/* Category Dropdown */}
@@ -635,7 +654,7 @@ export default function ManageWebComponent() {
           return (
             <div
               key={photo.id}
-              className="border rounded-lg overflow-hidden shadow-sm"
+              className=" bg-gray-700/50 rounded-lg overflow-hidden shadow-sm"
             >
               <img
                 src={imageUrl}
@@ -646,7 +665,7 @@ export default function ManageWebComponent() {
                 <h3 className="text-sm font-medium truncate">{photo.title}</h3>
 
                 {/* Tag Input */}
-                <div className="mb-2">
+                <div className="mb-2 flex items-center gap-2">
                   <input
                     type="text"
                     value={photoTagInputs[photo.id] || ""}
@@ -657,13 +676,13 @@ export default function ManageWebComponent() {
                       }))
                     }
                     placeholder="Edit tags (comma or space separated)"
-                    className="border rounded px-2 py-1 text-sm w-full"
+                    className="border rounded px-2 py-1 text-sm flex-grow"
                   />
                   <button
                     onClick={() => handleUpdateTags(photo.id)}
-                    className="mt-1 text-sm bg-blue-600 text-white px-2 py-1 rounded"
+                    className="text-sm bg-blue-600 text-white px-3 py-1.5 rounded hover:bg-blue-700 transition"
                   >
-                    Update Tags
+                    Update
                   </button>
                 </div>
 

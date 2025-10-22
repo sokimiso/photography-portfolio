@@ -350,10 +350,18 @@ export class PhotosService {
     if (!category) return [];
 
     // Extract unique tags
-    const tagsMap: Record<string, { id: string; name: string }> = {};
+    const tagsMap: Record<
+      string,
+      { id: string; name: string; friendlyName?: string }
+    > = {};
+
     category.photos.forEach((map) => {
       map.photo.tags.forEach((t) => {
-        tagsMap[t.tag.id] = { id: t.tag.id, name: t.tag.name };
+        tagsMap[t.tag.id] = {
+          id: t.tag.id,
+          name: t.tag.name,
+          friendlyName: t.tag.friendlyName || undefined,
+        };
       });
     });
 
