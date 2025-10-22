@@ -10,6 +10,7 @@ import {
   deletePhoto,
   hardDeletePhoto,
   updatePhotoTags,
+  updatePhotoTitle,
 } from "@lib/api";
 
 export default function ManageWebComponent() {
@@ -22,6 +23,14 @@ export default function ManageWebComponent() {
   const [uploading, setUploading] = useState(false);
   const [photoTagInputs, setPhotoTagInputs] = useState<Record<string, string>>(
     {}
+  );
+  const [photoTitleInputs, setPhotoTitleInputs] = useState<
+    Record<string, string>
+  >(() =>
+    photos.reduce((acc, photo) => {
+      acc[photo.id] = photo.title || "";
+      return acc;
+    }, {} as Record<string, string>)
   );
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
@@ -135,6 +144,15 @@ export default function ManageWebComponent() {
     loadPhotos(selectedCategory, page, true);
   }, [page, selectedCategory]);
 
+  /** Update photo title */
+  useEffect(() => {
+    const titles: Record<string, string> = {};
+    photos.forEach((photo) => {
+      titles[photo.id] = photo.title || "";
+    });
+    setPhotoTitleInputs(titles);
+  }, [photos]);
+
   /** Upload new photo */
   const handleUpload = async () => {
     if (!selectedFile || !selectedCategory) return;
@@ -150,7 +168,7 @@ export default function ManageWebComponent() {
       await uploadPhoto(formData);
       setSelectedFile(null);
       setTitle("");
-      setTags("hero");
+      setTags("");
 
       setPage(1);
       setPhotos([]);
@@ -196,10 +214,17 @@ export default function ManageWebComponent() {
       await updatePhotoTags(photoId, tagsArray);
       setPage(1);
       setPhotos([]);
+      loadAllCategoriesAndTags();
       loadPhotos(selectedCategory, 1, false);
     } catch (err) {
       console.error(err);
     }
+  };
+
+  const handleUpdateTitle = async (photoId: string) => {
+    const newTitle = photoTitleInputs[photoId];
+    await updatePhotoTitle(photoId, newTitle);
+    loadPhotos(selectedCategory, 1, false); // refresh grid
   };
 
   const toggleCategoryManager = () => setShowCategoryManager((prev) => !prev);
@@ -342,12 +367,10 @@ export default function ManageWebComponent() {
       <Breadcrumb path={path} />
 
       {/* --- CATEGORY / TAG MANAGEMENT --- */}
-      <div className="bg-white dark:bg-gray-600 bg-transparent p-4 rounded-2xl shadow space-y-4">
+      <div className="bg-gray-100 dark:bg-gray-600 p-4 rounded-2xl shadow space-y-4">
+        <h2 className="text-xl p-2 gap-2 py-2">Category and Tag Management</h2>
         {/* Category Manager */}
         <div>
-          <h2 className="text-xl p-2 gap-2 py-2">
-            Category and Tag Management
-          </h2>
           <button
             onClick={toggleCategoryManager}
             className="w-full text-left font-semibold py-2 px-3 bg-gray-200 dark:bg-gray-700 rounded"
@@ -594,137 +617,158 @@ export default function ManageWebComponent() {
       </div>
 
       {/* --- PHOTO MANAGEMENT --- */}
+      <div className="bg-gray-100 dark:bg-gray-600 p-4 rounded-2xl shadow space-y-4">
+        <h2 className="text-xl p-2 gap-2 py-2">Photo Management</h2>
+        {/* Category Dropdown */}
+        <div className="mb-6">
+          <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+            Select Category
+          </label>
+          <select
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+            className="dark:bg-gray-700 border rounded px-3 py-2 w-full md:w-1/3"
+          >
+            {categories.map((cat) => (
+              <option key={cat.id} value={cat.name}>
+                {cat.friendlyName || cat.name}
+              </option>
+            ))}
+          </select>
+        </div>
 
-      {/* Category Dropdown */}
-      <div className="mb-6">
-        <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
-          Select Category
-        </label>
-        <select
-          value={selectedCategory}
-          onChange={(e) => setSelectedCategory(e.target.value)}
-          className="dark:bg-gray-700 border rounded px-3 py-2 w-full md:w-1/3"
-        >
-          {categories.map((cat) => (
-            <option key={cat.id} value={cat.name}>
-              {cat.friendlyName || cat.name}
-            </option>
-          ))}
-        </select>
-      </div>
+        {/* Upload Form */}
+        <div className="flex flex-col md:flex-row items-center gap-4 mb-6">
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+            className="border rounded px-3 py-2"
+          />
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Title"
+            className="border rounded px-3 py-2"
+          />
+          <input
+            type="text"
+            onChange={(e) => setTags(e.target.value)}
+            placeholder="Tags (comma or space separated)"
+            className="border rounded px-3 py-2"
+          />
+          <button
+            onClick={handleUpload}
+            disabled={uploading}
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
+          >
+            {uploading ? "Uploading..." : "Upload"}
+          </button>
+        </div>
 
-      {/* Upload Form */}
-      <div className="flex flex-col md:flex-row items-center gap-4 mb-6">
-        <input
-          type="file"
-          accept="image/*"
-          onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
-          className="border rounded px-3 py-2"
-        />
-        <input
-          type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="Title"
-          className="border rounded px-3 py-2"
-        />
-        <input
-          type="text"
-          value={tags}
-          onChange={(e) => setTags(e.target.value)}
-          placeholder="Tags (comma or space separated)"
-          className="border rounded px-3 py-2"
-        />
-        <button
-          onClick={handleUpload}
-          disabled={uploading}
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
-        >
-          {uploading ? "Uploading..." : "Upload"}
-        </button>
-      </div>
+        {/* Photos Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          {photos.map((photo) => {
+            const imageUrl = `${BACKEND_URL}${
+              photo.mediumUrl.startsWith("/") ? "" : "/"
+            }${photo.mediumUrl}`;
 
-      {/* Photos Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {photos.map((photo) => {
-          const imageUrl = `${BACKEND_URL}${
-            photo.url.startsWith("/") ? "" : "/"
-          }${photo.url}`;
+            return (
+              <div
+                key={photo.id}
+                className=" bg-gray-700/50 rounded-lg overflow-hidden shadow-sm"
+              >
+                <img
+                  src={imageUrl}
+                  alt={photo.title}
+                  className="w-full h-40 object-cover"
+                />
+                <div className="p-2">
+                  {/* Title Input */}
+                  <div className="mb-2 flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={photoTitleInputs[photo.id] || ""}
+                      onChange={(e) =>
+                        setPhotoTitleInputs((prev) => ({
+                          ...prev,
+                          [photo.id]: e.target.value,
+                        }))
+                      }
+                      placeholder="Edit title"
+                      className="border rounded px-2 py-1 text-sm flex-grow"
+                    />
+                    <button
+                      onClick={() => handleUpdateTitle(photo.id)}
+                      className="text-sm bg-blue-600 text-white px-3 py-1.5 rounded hover:bg-blue-700 transition"
+                    >
+                      Update title
+                    </button>
+                  </div>
 
-          return (
-            <div
-              key={photo.id}
-              className=" bg-gray-700/50 rounded-lg overflow-hidden shadow-sm"
-            >
-              <img
-                src={imageUrl}
-                alt={photo.title}
-                className="w-full h-40 object-cover"
-              />
-              <div className="p-2">
-                <h3 className="text-sm font-medium truncate">{photo.title}</h3>
+                  {/* Tag Input */}
+                  <div className="mb-2 flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={photoTagInputs[photo.id] || ""}
+                      onChange={(e) =>
+                        setPhotoTagInputs((prev) => ({
+                          ...prev,
+                          [photo.id]: e.target.value,
+                        }))
+                      }
+                      placeholder="Edit tags (comma or space separated)"
+                      className="border rounded px-2 py-1 text-sm flex-grow"
+                    />
+                    <button
+                      onClick={() => handleUpdateTags(photo.id)}
+                      className="text-sm bg-blue-600 text-white px-3 py-1.5 rounded hover:bg-blue-700 transition"
+                    >
+                      Update tags
+                    </button>
+                  </div>
 
-                {/* Tag Input */}
-                <div className="mb-2 flex items-center gap-2">
-                  <input
-                    type="text"
-                    value={photoTagInputs[photo.id] || ""}
-                    onChange={(e) =>
-                      setPhotoTagInputs((prev) => ({
-                        ...prev,
-                        [photo.id]: e.target.value,
-                      }))
-                    }
-                    placeholder="Edit tags (comma or space separated)"
-                    className="border rounded px-2 py-1 text-sm flex-grow"
-                  />
-                  <button
-                    onClick={() => handleUpdateTags(photo.id)}
-                    className="text-sm bg-blue-600 text-white px-3 py-1.5 rounded hover:bg-blue-700 transition"
-                  >
-                    Update
-                  </button>
-                </div>
-
-                <div className="flex justify-between mt-2 gap-2">
-                  <button
-                    onClick={() =>
-                      handleToggleVisibility(photo.id, photo.isVisible)
-                    }
-                    className={`text-sm px-2 py-1 rounded ${
-                      photo.isVisible ? "bg-green-500" : "bg-gray-400"
-                    } text-white`}
-                  >
-                    {photo.isVisible ? "Visible" : "Hidden"}
-                  </button>
-                  <button
-                    onClick={() => handleSoftDelete(photo.id)}
-                    className="text-sm bg-yellow-500 text-white px-2 py-1 rounded"
-                  >
-                    Soft Delete
-                  </button>
-                  <button
-                    onClick={() => handleHardDelete(photo.id)}
-                    className="text-sm bg-red-600 text-white px-2 py-1 rounded"
-                  >
-                    Permanently Delete
-                  </button>
+                  <div className="flex justify-between mt-2 gap-2">
+                    <button
+                      onClick={() =>
+                        handleToggleVisibility(photo.id, photo.isVisible)
+                      }
+                      className={`text-sm px-2 py-1 rounded ${
+                        photo.isVisible ? "bg-green-500" : "bg-gray-400"
+                      } text-white`}
+                    >
+                      {photo.isVisible ? "Visible" : "Hidden"}
+                    </button>
+                    <button
+                      onClick={() => handleSoftDelete(photo.id)}
+                      className="text-sm bg-yellow-500 text-white px-2 py-1 rounded"
+                    >
+                      Soft Delete
+                    </button>
+                    <button
+                      onClick={() => handleHardDelete(photo.id)}
+                      className="text-sm bg-red-600 text-white px-2 py-1 rounded"
+                    >
+                      Permanently Delete
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
+
+        {!hasMore && photos.length > 0 && (
+          <p className="text-gray-500 text-center mt-6">All photos loaded.</p>
+        )}
+
+        {photos.length === 0 && selectedCategory && (
+          <p className="text-gray-500 text-center mt-6">
+            No photos uploaded for the "{selectedCategory}" category yet.
+          </p>
+        )}
       </div>
-
-      {!hasMore && photos.length > 0 && (
-        <p className="text-gray-500 text-center mt-6">All photos loaded.</p>
-      )}
-
-      {photos.length === 0 && selectedCategory && (
-        <p className="text-gray-500 text-center mt-6">
-          No photos uploaded for the "{selectedCategory}" category yet.
-        </p>
-      )}
     </div>
   );
 }

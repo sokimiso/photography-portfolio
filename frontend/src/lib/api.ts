@@ -19,7 +19,11 @@ export const getPhotosByCategory = async (
 };
 
 export const updatePhotoTags = async (id: string, tags: string[]) => {
-  const res = await axios.put(`${BACKEND_URL}/api/photos/${id}/tags`, { tags });
+  const res = await axios.put(
+    `${BACKEND_URL}/api/photos/${id}/tags`,
+    { tags },
+    { withCredentials: true }
+  );
   return res.data;
 };
 
@@ -56,6 +60,11 @@ export const hardDeletePhoto = async (id: string) => {
   return res.data;
 };
 
+export const updatePhotoTitle = async (id: string, title: string) => {
+  const res = await apiClient.put(`/api/photos/${id}/title`, { title });
+  return res.data;
+};
+
 export async function fetchMenuTexts() {
   const res = await fetch("/api/texts/menu");
   return res.json();
@@ -64,7 +73,7 @@ export async function fetchMenuTexts() {
 export const checkUserExists = async (email: string) => {
   const res = await apiClient.get(`/api/users/exists`, {
     params: { email },
-    withCredentials: true, // keep consistent with your setup
+    withCredentials: true,
   });
   return res.data; // { exists: true/false }
 };

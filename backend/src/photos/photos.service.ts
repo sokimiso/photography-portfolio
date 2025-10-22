@@ -416,6 +416,10 @@ export class PhotosService {
     return this.prisma.photoTag.update({ where: { id }, data });
   }
 
+  async updatePhotoTitle(id: string, data: Partial<{ title: string }>) {
+    return this.prisma.photo.update({ where: { id }, data });
+  }
+
   async hardDeleteTag(id: string) {
     // Remove all photo mappings
     await this.prisma.photoTagMap.deleteMany({ where: { tagId: id } });

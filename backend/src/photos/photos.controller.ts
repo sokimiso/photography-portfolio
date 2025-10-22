@@ -18,6 +18,7 @@ import { extname, join } from 'path';
 import { PhotosService } from './photos.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { AuthRequest } from '../common/types/auth-request.type';
+import { title } from 'process';
 
 @Controller('api/photos')
 export class PhotosController {
@@ -116,9 +117,16 @@ export class PhotosController {
     return this.photosService.toggleVisibility(id, isVisible);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Put(':id/tags')
   async updateTags(@Param('id') id: string, @Body('tags') tags: string[]) {
     return this.photosService.updatePhotoTags(id, tags);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Put(':id/title')
+  async updateTitle(@Param('id') id: string, @Body('title') title: string) {
+    return this.photosService.updatePhotoTitle(id, { title });
   }
 
   @UseGuards(JwtAuthGuard)

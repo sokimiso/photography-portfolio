@@ -38,6 +38,12 @@ export default function GalleryPageComponent() {
 
   const loaderRef = useRef<HTMLDivElement | null>(null);
 
+  const [ratios, setRatios] = useState<Record<string, number>>({});
+
+  const handleImageLoad = (id: string, width: number, height: number) => {
+    setRatios((prev) => ({ ...prev, [id]: width / height }));
+  };
+
   // Load public categories
   useEffect(() => {
     const loadCategories = async () => {
@@ -217,26 +223,40 @@ export default function GalleryPageComponent() {
 
       {/* Gallery grid */}
       <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
-        {filteredPhotos.map((photo, index) => (
-          <div
-            key={photo.id}
-            className="w-full max-w-full h-80 overflow-hidden rounded-lg cursor-pointer relative"
-            onClick={() => setActiveIndex(index)}
-          >
-            <Image
-              src={
-                photo.mediumUrl
-                  ? `${BACKEND_URL}${photo.mediumUrl}`
-                  : "/placeholder.jpg"
-              }
-              alt={photo.title ?? "Gallery image"}
-              fill
-              className="object-contain"
-              priority={index === 0}
-              {...(index !== 0 && { loading: "lazy" })}
-            />
-          </div>
-        ))}
+        {filteredPhotos.map((photo, index) => {
+          const aspectRatio = ratios[photo.id];
+          const objectPosition =
+            aspectRatio && aspectRatio < 1 ? "center 25%" : "center center";
+
+          return (
+            <div
+              key={photo.id}
+              className="w-full max-w-full h-80 overflow-hidden rounded-lg cursor-pointer relative"
+              onClick={() => setActiveIndex(index)}
+            >
+              <Image
+                src={
+                  photo.mediumUrl
+                    ? `${BACKEND_URL}${photo.mediumUrl}`
+                    : "/placeholder.jpg"
+                }
+                alt={photo.title ?? "Gallery image"}
+                fill
+                className="object-cover"
+                style={{ objectPosition }}
+                onLoad={(e) =>
+                  handleImageLoad(
+                    photo.id,
+                    e.currentTarget.naturalWidth,
+                    e.currentTarget.naturalHeight
+                  )
+                }
+                priority={index === 0}
+                {...(index !== 0 && { loading: "lazy" })}
+              />
+            </div>
+          );
+        })}
       </div>
 
       {/* Infinite scroll trigger with fade */}
