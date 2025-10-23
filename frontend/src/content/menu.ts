@@ -19,6 +19,7 @@ export const createMenuItems = (texts: Texts): MenuItem[] => {
   return [
     {
       label: texts.menu.services,
+      href: "/services",
       subItems: [
         {
           label: texts.menu.servicesSub.portraits,
@@ -32,7 +33,20 @@ export const createMenuItems = (texts: Texts): MenuItem[] => {
     {
       label: texts.menu.gallery,
       href: "/gallery",
+      subItems: [
+        { label: texts.menu.gallerySub.children, href: "/gallery/children" },
+        { label: texts.menu.gallerySub.school, href: "/gallery/school" },
+        { label: texts.menu.gallerySub.weddings, href: "/gallery/weddings" },
+      ],
     },
-    { label: texts.menu.customerZone, href: "/login" },
+    {
+      label: texts.menu.reservation,
+      href: "/reserve",
+      subItems: [{ label: texts.menu.reservation, href: "/reserve" }],
+    },
+    {
+      label: texts.menu.customerZone,
+      href: "/login",
+    },
   ];
 };

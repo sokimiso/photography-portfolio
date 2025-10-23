@@ -1,11 +1,11 @@
-import GalleryPageComponent from "./GalleryPageComponent";
+import ServicesPageComponent from "./ServicesPageComponent";
 import Footer from "@/components/layout/Footer";
 
-export default function GalleryPage() {
+export default function ServicesPage() {
   return (
     <main className="bg-background-light dark:bg-background-dark text-foreground py-7">
       <section id="hero">
-        <GalleryPageComponent />
+        <ServicesPageComponent />
       </section>
 
       <Footer />

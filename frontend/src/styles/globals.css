@@ -15,6 +15,7 @@
   /* Font families */
   --font-sans: "Inter", system-ui, sans-serif;
   --font-heading: "Playfair Display", serif;
+  --font-weight: 400;
 }
 
 /* -------------------------------

@@ -1,6 +1,12 @@
 "use client";
 
-import { createContext, ReactNode, useContext, useState, useEffect } from "react";
+import {
+  createContext,
+  ReactNode,
+  useContext,
+  useState,
+  useEffect,
+} from "react";
 
 export interface Texts {
   menu: {
@@ -65,7 +71,7 @@ export interface Texts {
         thisWeeksEvents: string;
         nextWeeksEvents: string;
         overdueEvents: string;
-      },      
+      };
     };
     notificationsPage?: {
       noNotificationsMessage: string;
@@ -87,7 +93,7 @@ export interface Texts {
     manage: string;
     show: string;
   };
-  common?:{
+  common?: {
     name: string;
     lastName: string;
     email: string;
@@ -105,7 +111,7 @@ const defaultTexts: Texts = {
     services: "Služby",
     reservation: "Rezervácia",
     gallery: "Galéria",
-    customerZone: "Prihlásiť sa",
+    customerZone: "Zákaznícka zóna",
     servicesSub: {
       portraits: "Portréty detí",
       school: "Škola - Škôlka",
@@ -120,7 +126,8 @@ const defaultTexts: Texts = {
   },
   homepage: {
     heroTitle: "Zachyťte výnimočné momenty",
-    heroSubtitle: "Profesionálny fotograf pre deti, školy, svadby a iné udalosti.",
+    heroSubtitle:
+      "Profesionálny fotograf pre deti, školy, svadby a iné udalosti.",
     cta: "Rezervácia",
   },
   dashboard: {
@@ -173,7 +180,6 @@ const defaultTexts: Texts = {
         nextWeeksEvents: "Udalosti budúci týždeň",
         overdueEvents: "Zmeškané udalosti",
       },
-
     },
     notificationsPage: {
       noNotificationsMessage: "Žiadne notifikácie",
@@ -203,7 +209,7 @@ const defaultTexts: Texts = {
     address: "Adresa",
     phone: "Telefón",
     package: "Balíček",
-  },  
+  },
   footer: {
     text: "© 2025 Sokirka Photography. Všetky práva vyhradené.",
   },
@@ -251,7 +257,3 @@ export const TextProvider = ({ children }: { children: ReactNode }) => {
 
 export const useTexts = () => useContext(TextContext).texts;
 export const useSetTexts = () => useContext(TextContext).setTexts;
-
-
-
-
