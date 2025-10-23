@@ -8,17 +8,16 @@ export class PackagesService {
   async findAll() {
     const packages = await this.prisma.photoshootPackage.findMany({
       where: { deletedAt: null },
-      select: {          
-          id: true,
-          internalName: true,
-          displayName: true,
-          basePrice: true,
-          durationHrs: true,
-          maxPhotos: true, },
+      select: {
+        id: true,
+        internalName: true,
+        shortName: true,
+        displayName: true,
+        basePrice: true,
+        durationHrs: true,
+        maxPhotos: true,
+      },
     });
     return { packages };
   }
 }
-
-
-

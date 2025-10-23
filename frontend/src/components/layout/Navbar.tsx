@@ -88,7 +88,7 @@ export default function Navbar() {
             <div className="relative group">
               <Link
                 href="/login"
-                className="navbar-a flex items-center h-full p-2 text-gray-900 dark:text-gray-100 hover:text-blue-500 dark:hover:text-blue-400 transition-colors"
+                className="navbar-a flex items-center h-full p-2 text-gray-900 dark:text-gray-100 transition-colors"
               >
                 <LogIn size={20} />
               </Link>

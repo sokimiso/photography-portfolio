@@ -62,27 +62,15 @@ export default function HeroSection() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8 }}
-        className="relative text-center px-4 sm:px-6 lg:px-8 z-10 max-w-3xl"
+        className="relative text-center px-4 lg:pt-16 sm:px-6 lg:px-8 z-10 max-w-5xl"
       >
         <div className="inline-block px-6 py-4 rounded-lg bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm">
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-heading font-bold text-foreground">
+          <h1 className="text-4xl sm:text-5xl pb-8 lg:text-6xl font-heading font-bold text-foreground">
             {texts.homepage?.heroTitle}
           </h1>
           <p className="mt-4 text-lg sm:text-xl text-foreground/90">
             {texts.homepage?.heroSubtitle}
           </p>
-          <motion.a
-            onClick={(e) => {
-              e.preventDefault();
-              const reservationSection = document.getElementById(
-                "reservation-section"
-              );
-              reservationSection?.scrollIntoView({ behavior: "smooth" });
-            }}
-            className="inline-block mt-6 px-6 py-3 rounded-lg bg-primary bg-white/60 dark:bg-gray-900/60 text-card-background font-medium shadow-lg hover:bg-primary-light transition-colors cursor-pointer"
-          >
-            {texts.homepage?.cta}
-          </motion.a>
         </div>
       </motion.div>
     </section>

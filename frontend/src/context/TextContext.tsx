@@ -11,9 +11,12 @@ import {
 export interface Texts {
   menu: {
     services: string;
+    services_details_wed: string;
+    order: string;
     reservation: string;
     gallery: string;
     customerZone: string;
+    nextAvailableDate: string;
     servicesSub: Record<string, string>;
     gallerySub: Record<string, string>;
   };
@@ -100,6 +103,9 @@ export interface Texts {
     address: string;
     phone: string;
     package: string;
+    packages: string;
+    availabledPackages: string;
+    moreInfo: string;
   };
   footer?: {
     text: string;
@@ -108,13 +114,18 @@ export interface Texts {
 
 const defaultTexts: Texts = {
   menu: {
+    order: "Objednať",
     services: "Služby",
+    services_details_wed: "Ponuka svadobného fotenia",
     reservation: "Rezervácia",
-    gallery: "Galéria",
+    gallery: "Fotogaléria",
     customerZone: "Zákaznícka zóna",
+    nextAvailableDate: "Najbližší voľný termín",
     servicesSub: {
-      portraits: "Portréty detí",
-      school: "Škola - Škôlka",
+      portraits: "Portréty",
+      portraits_kids: "Portréty detí",
+      kindergarten: "Škôlka",
+      school: "Škola",
       home: "Fotografovanie u vás doma",
       weddings: "Svadby",
     },
@@ -209,6 +220,9 @@ const defaultTexts: Texts = {
     address: "Adresa",
     phone: "Telefón",
     package: "Balíček",
+    packages: "Balíky",
+    availabledPackages: "Dostupné balíky",
+    moreInfo: "Viac informácií",
   },
   footer: {
     text: "© 2025 Sokirka Photography. Všetky práva vyhradené.",

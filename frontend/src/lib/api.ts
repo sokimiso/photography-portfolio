@@ -86,3 +86,38 @@ export const checkUserExists = async (email: string) => {
   });
   return res.data; // { exists: true/false }
 };
+
+export interface PhotoshootPackage {
+  id: string;
+  displayName: string;
+  internalName: string;
+  shortName: string;
+  basePrice: string;
+  durationHrs: number;
+  maxPhotos: number;
+  description?: string;
+  image?: string;
+  link?: string;
+}
+
+/** Fetch all packages from backend */
+export const getAllPackages = async (): Promise<PhotoshootPackage[]> => {
+  const res = await apiClient.get("/api/packages", { withCredentials: true });
+
+  // Extract packages array
+  const packages = res.data?.packages;
+  if (!Array.isArray(packages)) {
+    console.warn("Expected array of packages but got:", packages);
+    return [];
+  }
+
+  return packages;
+};
+
+/** Fetch only active wedding packages */
+export const getActiveWeddingPackages = async (): Promise<
+  PhotoshootPackage[]
+> => {
+  const packages = await getAllPackages();
+  return packages.filter((p) => p.internalName.includes("WED"));
+};
