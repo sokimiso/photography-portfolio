@@ -43,7 +43,7 @@ export default function MobileDropdown({
       <div className="border-b border-gray-200 dark:border-gray-700">
         <button
           onClick={() => toggleOpen(index)}
-          className="w-full text-left px-3 py-2 font-normal text-gray-900 dark:text-gray-100 flex justify-between items-center navbar-a transition-colors uppercase"
+          className="w-full text-left uppercase px-3 py-2 font-normal text-gray-900 dark:text-gray-100 flex justify-between items-center navbar-a transition-colors"
         >
           {item.label}
           <motion.span
@@ -78,13 +78,22 @@ export default function MobileDropdown({
                   }}
                   whileHover={{ scale: 1.03 }} // subtle scale-up on hover
                 >
-                  <Link
-                    href={subItem.href}
-                    className="block px-5 py-2 text-gray-900 dark:text-gray-100 navbar-a transition-colors font-normal uppercase"
-                    onClick={closeMenu}
-                  >
-                    {subItem.label}
-                  </Link>
+                  {subItem.href ? (
+                    <Link
+                      href={subItem.href}
+                      className="block px-5 py-2 text-gray-900 dark:text-gray-100 navbar-a transition-colors"
+                      onClick={closeMenu}
+                    >
+                      {subItem.label}
+                    </Link>
+                  ) : (
+                    <button
+                      onClick={closeMenu}
+                      className="block w-full text-left px-5 py-2 text-gray-900 dark:text-gray-100 navbar-a transition-colors"
+                    >
+                      {subItem.label}
+                    </button>
+                  )}
                 </motion.div>
               ))}
             </motion.div>
@@ -96,7 +105,7 @@ export default function MobileDropdown({
 
   // Single top-level item
   return (
-    <div className="border-b border-gray-200 dark:border-gray-700">
+    <div className="border-b border-gray-200 dark:border-gray-700 uppercase">
       {item.href ? (
         <Link
           href={item.href}
@@ -108,7 +117,7 @@ export default function MobileDropdown({
       ) : (
         <button
           onClick={handleClick}
-          className="w-full text-left px-3 py-2 font-normal text-gray-900 dark:text-gray-100 hover:text-blue-500 dark:hover:text-blue-400 transition-colors"
+          className="w-full text-left px-3 py-2 font-normal transition-colors"
         >
           {item.label}
         </button>

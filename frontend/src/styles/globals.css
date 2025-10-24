@@ -2,17 +2,17 @@
 
 /* -------------------------------
     Light Theme
-  --------------------------------- */
+--------------------------------- */
 :root {
   /* Backgrounds */
-  --background: #f4f1de; /* main page background */
-  --foreground: #2e2e2e; /* primary text */
-  --card-background: #2c2e43; /* card/panel background */
-  --primary: #e76f51; /* main accent / buttons */
-  --primary-light: #f2cc8f; /* lighter accent */
-  --secondary: #e8f3f2; /* secondary accent / links */
+  --background: #f4f1de;
+  --foreground: #1e3944;
+  --card-background: #1e3944;
+  --primary: #fa6d4a;
+  --primary-light: #f2cc8f;
+  --secondary: #e8f3f2;
 
-  /* Font families */
+  /* Fonts */
   --font-sans: "Inter", system-ui, sans-serif;
   --font-heading: "Playfair Display", serif;
   --font-weight: 400;
@@ -20,21 +20,21 @@
 
 /* -------------------------------
     Dark Theme
-  --------------------------------- */
+--------------------------------- */
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #264653; /* main dark background */
-    --foreground: #d4dedf; /* text for dark bg */
-    --card-background: #2c2e43; /* slightly darker panels */
-    --primary: #ee6c4d; /* accent remains same */
+    --background: #1e3944;
+    --foreground: #f4f1de;
+    --card-background: #1e3944;
+    --primary: #fa6d4a;
     --primary-light: #f2cc8f;
     --secondary: #e8f3f2;
   }
 }
 
 /* -------------------------------
-    Apply variables
-  --------------------------------- */
+    Base styles
+--------------------------------- */
 body {
   background-color: var(--background);
   color: var(--foreground);
@@ -42,7 +42,6 @@ body {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* Headings */
 h1,
 h2,
 h3,
@@ -53,24 +52,68 @@ h6 {
   color: var(--foreground);
 }
 
-/* Links */
-a {
-  color: var(--primary);
-  transition: color 0.2s ease;
+.navbar {
+  background-color: #1e3944;
 }
 
-a:hover {
-  color: var(--primary-light);
-}
-
+a,
 .navbar-a {
   color: var(--primary);
   transition: color 0.2s ease;
+  position: relative;
 }
 
+a:hover,
 .navbar-a:hover {
   color: var(--primary-light);
+}
+
+.navbar-a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 3px;
+  width: 0;
+  background-color: var(--background);
+  transition: width 0.3s ease;
+}
+
+.navbar-a:hover::after {
+  width: 100%;
+}
+
+.navbar-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 0 1rem;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  font-weight: 400;
+  letter-spacing: 0.1em; /* try 0.05em, 0.1em, etc. */
+  color: var(--primary);
   transition: color 0.2s ease;
+}
+
+.navbar-item:hover {
+  color: var(--primary-light);
+}
+
+.navbar-item::after {
+  content: "";
+  position: absolute;
+  bottom: -23px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background-color: var(--primary-light);
+  transition: width 0.3s ease;
+}
+
+.navbar-item:hover::after,
+.group.active .navbar-item::after {
+  width: 100%;
 }
 
 /* Buttons */
@@ -80,6 +123,8 @@ a:hover {
   transition: all 0.2s ease;
   font-size: 1rem;
   line-height: normal;
+  padding: 0.5rem 1rem;
+  border-radius: 0.25rem;
 }
 
 .main-ui-button:hover {
@@ -104,20 +149,13 @@ a:hover {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* Scrollbar */
+html {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  scroll-behavior: smooth;
 }
 
-/* Hide scrollbar visually, but keep scrolling enabled */
-html {
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE 10+ */
-  scroll-behavior: smooth;
-  data-scroll-behavior: smooth;
-}
 html::-webkit-scrollbar {
-  display: none; /* Chrome, Safari, Edge */
+  display: none;
 }

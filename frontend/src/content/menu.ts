@@ -8,7 +8,7 @@ import {
   Baby,
   House,
   Heart,
-  Package,
+  Blocks,
 } from "lucide-react";
 
 export interface SubMenuItem {
@@ -51,6 +51,7 @@ export const createMenuItems = (texts: Texts): MenuItem[] => {
   return [
     {
       label: texts.menu.servicesSub.portraits,
+      href: "/services/portraits-kids",
       id: "kids",
       subItems: [
         {
@@ -61,14 +62,15 @@ export const createMenuItems = (texts: Texts): MenuItem[] => {
         {
           icon: House,
           label: texts.menu.servicesSub.home,
-          href: "/services/home",
+          href: "/services/portraits-kids",
         },
         {
-          icon: Package,
+          icon: Blocks,
           label: texts.common?.availabledPackages,
+          href: "/services/portraits-kids",
           button: {
             label: texts.common?.moreInfo,
-            href: "/service/weddings",
+            href: "/service/portraits-kids",
           },
           dynamicPackages: true, // custom flag to identify this submenu
         },
@@ -90,16 +92,16 @@ export const createMenuItems = (texts: Texts): MenuItem[] => {
         {
           icon: Images,
           label: texts.menu.gallery,
-          href: "/gallery/kids",
+          href: "/gallery",
           description: "Pozrite si fotogalériu",
         },
         {
-          icon: Heart,
+          icon: Blocks,
           label: texts.common?.availabledPackages,
           id: "wedding",
           button: {
             label: texts.common?.moreInfo,
-            href: "/service/weddings",
+            href: "/service/school",
           },
           dynamicPackages: true, // custom flag to identify this submenu
         },
@@ -118,19 +120,19 @@ export const createMenuItems = (texts: Texts): MenuItem[] => {
         {
           icon: Images,
           label: texts.menu.gallery,
-          href: "/gallery/weddings",
+          href: "/gallery",
           description: "Pozrite si svadobnú galériu",
           dynamicFeatured: true,
           featuredCategory: "event-wedding",
         },
         {
-          icon: Heart,
+          icon: Blocks,
           label: texts.common?.availabledPackages,
           button: {
             label: texts.common?.moreInfo,
             href: "/service/weddings",
           },
-          dynamicPackages: true, // custom flag to identify this submenu
+          dynamicPackages: true,
         },
       ],
     },

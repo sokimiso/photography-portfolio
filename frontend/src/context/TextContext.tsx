@@ -137,7 +137,7 @@ const defaultTexts: Texts = {
     },
   },
   homepage: {
-    heroTitle: "Zachyťte výnimočné momenty",
+    heroTitle: "Zachytíme výnimočné momenty",
     heroSubtitle:
       "Profesionálny fotograf pre deti, školy, svadby a iné udalosti.",
     cta: "Rezervácia",

@@ -50,7 +50,6 @@ export default function DesktopDropdown({
       if (!item.subItems || item.subItems.length === 0) return;
 
       let updatedSubItems = [...item.subItems];
-
       const hasDynamicPackages = item.subItems.some(
         (sub) => sub.dynamicPackages
       );
@@ -88,25 +87,24 @@ export default function DesktopDropdown({
       onMouseEnter={onHoverStart}
       onMouseLeave={onHoverEnd}
     >
-      <div className="relative h-full flex items-center cursor-pointer group">
-        {item.subItems && item.subItems.length > 0 ? (
-          <span className="px-4 py-0 text-[var(--primary)] relative group h-full flex items-center">
-            {item.label}
-            <span className="absolute left-0 bottom-0 h-[2px] w-0 bg-[var(--primary-light)] group-hover:w-full transition-all duration-300"></span>
-          </span>
+      <div
+        className={`relative h-full flex items-center cursor-pointer group ${
+          isOpen ? "active" : ""
+        }`}
+      >
+        {item.subItems ? (
+          <span className="navbar-item">{item.label}</span>
         ) : (
           <motion.span
             onClick={handleClick}
-            className={`${menuItemClasses} relative h-full flex items-center`}
+            className="navbar-item"
             whileHover={{ scale: 1.03 }}
             transition={{ duration: 0.15 }}
           >
             {item.href ? (
-              <Link href={item.href} className={menuItemClasses}>
-                {item.label}
-              </Link>
+              <Link href={item.href}>{item.label}</Link>
             ) : (
-              <span className={menuItemClasses}>{item.label}</span>
+              <span>{item.label}</span>
             )}
           </motion.span>
         )}
@@ -121,12 +119,11 @@ export default function DesktopDropdown({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.4 }}
-            className="fixed top-[64px] left-0 w-screen border-t bg-white dark:bg-gray-900 shadow-lg z-40"
+            className="navbar fixed top-[64px] p-4 left-0 w-screen border-t border-[var(--primary-light)] dark:border-[var(--primary-light)] shadow-lg z-40"
           >
-            <div className="max-w-7xl mx-auto px-8 py-6 grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="max-w-7xl mx-auto py-6 grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {dynamicSubItems.map((subItem, index) => {
                 const Icon = subItem.icon;
-
                 return (
                   <motion.div
                     key={index}
@@ -175,7 +172,7 @@ export default function DesktopDropdown({
                     {subItem.button && (
                       <Link
                         href={subItem.button.href}
-                        className="mt-6 inline-block bg-[var(--primary-light)] text-white px-3 py-1 rounded-lg text-xs font-medium hover:bg-[var(--primary)] transition-all"
+                        className="mt-6 inline-block bg-[var(--primary-light)] text-white px-3 py-1 rounded text-xs font-medium hover:bg-[var(--primary)] transition-all"
                       >
                         {subItem.button.label}
                       </Link>
