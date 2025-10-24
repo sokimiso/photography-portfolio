@@ -121,3 +121,45 @@ export const getActiveWeddingPackages = async (): Promise<
   const packages = await getAllPackages();
   return packages.filter((p) => p.internalName.includes("WED"));
 };
+
+/** Fetch only active kids portrait packages */
+export const getActiveKidsPortraitPackages = async (): Promise<
+  PhotoshootPackage[]
+> => {
+  const packages = await getAllPackages();
+  return packages.filter(
+    (p) =>
+      p.internalName.includes("KIDS_AT") || p.internalName.includes("KIDS_HOME")
+  );
+};
+
+/** Fetch only active kids portrait packages */
+export const getActiveSchoolPackages = async (): Promise<
+  PhotoshootPackage[]
+> => {
+  const packages = await getAllPackages();
+  return packages.filter((p) => p.internalName.includes("KIDS_IND"));
+};
+
+/** Fetch random featured photos (isFeatured=true) from a category */
+export const getFeaturedPhotosByCategory = async (
+  category: string,
+  limit = 4
+) => {
+  try {
+    const res = await getPhotosByCategory(category, 1, 200, true);
+    const allPhotos = res.photos || [];
+
+    // Keep only featured photos
+    const featured = allPhotos.filter((p: any) => p.isFeatured);
+
+    // Randomize and slice to limit
+    const shuffled = featured.sort(() => 0.5 - Math.random());
+    const selected = shuffled.slice(0, limit);
+
+    return selected;
+  } catch (err) {
+    console.error("Error fetching featured photos:", err);
+    return [];
+  }
+};

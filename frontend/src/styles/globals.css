@@ -64,7 +64,7 @@ a:hover {
 }
 
 .navbar-a {
-  color: inherit;
+  color: var(--primary);
   transition: color 0.2s ease;
 }
 

@@ -126,6 +126,7 @@ const defaultTexts: Texts = {
       portraits_kids: "Portréty detí",
       kindergarten: "Škôlka",
       school: "Škola",
+      kids: "Škola a Škôlka",
       home: "Fotografovanie u vás doma",
       weddings: "Svadby",
     },

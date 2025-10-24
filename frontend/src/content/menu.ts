@@ -8,10 +8,12 @@ import {
   Baby,
   House,
   Heart,
+  Package,
 } from "lucide-react";
 
 export interface SubMenuItem {
   label?: string;
+  id?: string;
   href?: string;
   description?: string;
   image?: string;
@@ -20,16 +22,24 @@ export interface SubMenuItem {
     label?: string;
     href: string;
   };
-  dynamicPackages?: boolean; // custom flag for dynamic wedding packages
+  dynamicPackages?: boolean;
   packages?: {
     label: string;
-    href: string;
-  }[]; // list of dynamically loaded packages
+    href?: string;
+  }[];
+
+  dynamicFeatured?: boolean; // custom flag for dynamically loaded featured photos
+  featuredCategory?: string; // which category to load from (e.g. "event-wedding")
+  featuredPhotos?: {
+    thumbnailUrl: string;
+    id: string;
+  }[];
 }
 
 export interface MenuItem {
   label: string;
   href?: string;
+  id?: string;
   subItems?: SubMenuItem[];
   onClick?: () => void; // click handler (logout)
 }
@@ -41,6 +51,7 @@ export const createMenuItems = (texts: Texts): MenuItem[] => {
   return [
     {
       label: texts.menu.servicesSub.portraits,
+      id: "kids",
       subItems: [
         {
           icon: Baby,
@@ -52,29 +63,25 @@ export const createMenuItems = (texts: Texts): MenuItem[] => {
           label: texts.menu.servicesSub.home,
           href: "/services/home",
         },
+        {
+          icon: Package,
+          label: texts.common?.availabledPackages,
+          button: {
+            label: texts.common?.moreInfo,
+            href: "/service/weddings",
+          },
+          dynamicPackages: true, // custom flag to identify this submenu
+        },
       ],
     },
     {
-      label:
-        texts.menu.servicesSub.school +
-        " & " +
-        texts.menu.servicesSub.kindergarten,
+      label: texts.menu.servicesSub.kids,
+      id: "school",
       subItems: [
         {
           icon: UserRoundPen,
-          label: texts.menu.servicesSub.school,
+          label: texts.menu.servicesSub.kids,
           description: "Pre viac informácií nás kontaktujte",
-          href: "/service/reservation",
-          button: {
-            label: texts.menu.order,
-            href: "/service/reservation",
-          },
-        },
-        {
-          icon: UserRoundPen,
-          label: texts.menu.servicesSub.kindergarten,
-          description: "Pre viac informácií nás kontaktujte",
-          href: "/service/reservation",
           button: {
             label: texts.menu.order,
             href: "/service/reservation",
@@ -86,10 +93,21 @@ export const createMenuItems = (texts: Texts): MenuItem[] => {
           href: "/gallery/kids",
           description: "Pozrite si fotogalériu",
         },
+        {
+          icon: Heart,
+          label: texts.common?.availabledPackages,
+          id: "wedding",
+          button: {
+            label: texts.common?.moreInfo,
+            href: "/service/weddings",
+          },
+          dynamicPackages: true, // custom flag to identify this submenu
+        },
       ],
     },
     {
       label: texts.menu.servicesSub.weddings,
+      id: "wedding",
       subItems: [
         {
           icon: Gem,
@@ -102,6 +120,8 @@ export const createMenuItems = (texts: Texts): MenuItem[] => {
           label: texts.menu.gallery,
           href: "/gallery/weddings",
           description: "Pozrite si svadobnú galériu",
+          dynamicFeatured: true,
+          featuredCategory: "event-wedding",
         },
         {
           icon: Heart,
@@ -117,24 +137,10 @@ export const createMenuItems = (texts: Texts): MenuItem[] => {
     {
       label: texts.menu.gallery,
       href: "/gallery",
-      subItems: [
-        { label: texts.menu.gallerySub.school, href: "/gallery/school" },
-        { label: texts.menu.gallerySub.weddings, href: "/gallery/weddings" },
-      ],
     },
     {
       label: texts.menu.order,
-      subItems: [
-        {
-          label: texts.menu.nextAvailableDate,
-          href: "/reserve",
-          description:
-            texts.menu.servicesSub.kids +
-            "date taken from DB" +
-            texts.menu.servicesSub.portraits +
-            "date taken from DB",
-        },
-      ],
+      href: "/service/reservation",
     },
     {
       label: texts.menu.customerZone,

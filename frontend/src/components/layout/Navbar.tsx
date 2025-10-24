@@ -20,12 +20,10 @@ export default function Navbar() {
   const [mounted, setMounted] = useState(false);
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [tooltip, setTooltip] = useState(false);
 
   useEffect(() => setMounted(true), []);
 
   if (!mounted) return null;
-
   if (loggedIn && pathname.startsWith("/dashboard")) return null;
 
   const menuItems = createMenuItems(texts);
@@ -37,8 +35,9 @@ export default function Navbar() {
     setOpenIndex(null);
   };
 
+  // ✅ Updated menu item classes to use --primary color consistently
   const menuItemClasses =
-    "navbar-a px-4 py-0 text-sm font-normal uppercase text-gray-900 dark:text-gray-100 transition-colors flex items-center h-full relative";
+    "navbar-a py-0 text-sm font-normal uppercase text-[var(--primary)] transition-colors flex items-center h-full relative group";
 
   return (
     <motion.nav
@@ -49,7 +48,7 @@ export default function Navbar() {
     >
       <div className="px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-stretch justify-between">
-          {/* LEFT: Logo + first menu items */}
+          {/* LEFT: Logo + menu items */}
           <div className="flex items-stretch space-x-4">
             <Link href="/" className="flex items-center">
               <motion.div
@@ -77,23 +76,22 @@ export default function Navbar() {
                   isOpen={openIndex === index}
                   onHoverStart={() => setOpenIndex(index)}
                   onHoverEnd={() => setOpenIndex(null)}
-                  menuItemClasses={menuItemClasses}
+                  menuItemClasses={menuItemClasses} // pass updated classes
                 />
               ))}
             </div>
           </div>
 
-          {/* RIGHT: login icon with tooltip */}
+          {/* RIGHT: Login icon */}
           <div className="hidden md:flex items-center ml-4">
             <div className="relative group">
               <Link
                 href="/login"
-                className="navbar-a flex items-center h-full p-2 text-gray-900 dark:text-gray-100 transition-colors"
+                className="navbar-a flex items-center h-full p-2 text-[var(--primary)] transition-colors"
               >
                 <LogIn size={20} />
               </Link>
 
-              {/* Tooltip */}
               <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-4 -ml-3 px-2 py-1 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-xs rounded shadow-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-200 whitespace-nowrap">
                 {texts.menu.customerZone}
               </span>
