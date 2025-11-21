@@ -70,7 +70,7 @@ export const createMenuItems = (texts: Texts): MenuItem[] => {
           href: "/services/portraits-kids",
           button: {
             label: texts.common?.moreInfo,
-            href: "/service/portraits-kids",
+            href: "/services/portraits-kids",
           },
           dynamicPackages: true, // custom flag to identify this submenu
         },
@@ -86,7 +86,7 @@ export const createMenuItems = (texts: Texts): MenuItem[] => {
           description: "Pre viac informácií nás kontaktujte",
           button: {
             label: texts.menu.order,
-            href: "/service/reservation",
+            href: "/services/reservation",
           },
         },
         {
@@ -101,7 +101,7 @@ export const createMenuItems = (texts: Texts): MenuItem[] => {
           id: "wedding",
           button: {
             label: texts.common?.moreInfo,
-            href: "/service/school",
+            href: "/services/school",
           },
           dynamicPackages: true, // custom flag to identify this submenu
         },
@@ -130,7 +130,7 @@ export const createMenuItems = (texts: Texts): MenuItem[] => {
           label: texts.common?.availabledPackages,
           button: {
             label: texts.common?.moreInfo,
-            href: "/service/weddings",
+            href: "/services/weddings",
           },
           dynamicPackages: true,
         },
@@ -142,7 +142,7 @@ export const createMenuItems = (texts: Texts): MenuItem[] => {
     },
     {
       label: texts.menu.order,
-      href: "/service/reservation",
+      href: "/services/reservation",
     },
     {
       label: texts.menu.customerZone,
