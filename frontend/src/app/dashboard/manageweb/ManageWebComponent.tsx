@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import axios from "axios";
 import Breadcrumb from "../components/Breadcrumb";
 import {
   getPhotosByCategory,
@@ -13,6 +12,7 @@ import {
   updatePhotoTitle,
   togglePhotoFeatured,
 } from "@lib/api";
+import apiClient from "@/lib/apiClient";
 
 export default function ManageWebComponent() {
   const [photos, setPhotos] = useState<any[]>([]);
@@ -54,15 +54,12 @@ export default function ManageWebComponent() {
   const [newTagFriendly, setNewTagFriendly] = useState("");
   const [newTagPublic, setNewTagPublic] = useState(false);
 
-  const BACKEND_URL =
-    process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
-
   const path = ["Dashboard", "Manage Web", "Hero Photos"];
 
   /** Load all categories for dropdown */
   const loadCategories = async () => {
     try {
-      const res = await axios.get(`${BACKEND_URL}/api/photos/categories`);
+      const res = await apiClient.get("/photos/categories");
       const data = res.data;
       setCategories(data);
       if (data.length > 0 && !selectedCategory)
@@ -76,8 +73,8 @@ export default function ManageWebComponent() {
   const loadAllCategoriesAndTags = async () => {
     try {
       const [catRes, tagRes] = await Promise.all([
-        axios.get(`${BACKEND_URL}/api/photos/categories`),
-        axios.get(`${BACKEND_URL}/api/photos/tags`),
+        apiClient.get("/photos/categories"),
+        apiClient.get("/photos/tags"),
       ]);
       setAllCategories(catRes.data);
       setAllTags(tagRes.data);
@@ -262,7 +259,7 @@ export default function ManageWebComponent() {
   const handleAddCategory = async () => {
     if (!newCategoryName.trim()) return;
     try {
-      await axios.post(`${BACKEND_URL}/api/photos/categories`, {
+      await apiClient.post("/photos/categories", {
         name: newCategoryName.trim(),
         friendlyName: newCategoryFriendly.trim(),
         isPublic: newCategoryPublic,
@@ -281,7 +278,7 @@ export default function ManageWebComponent() {
   const handleAddTag = async () => {
     if (!newTagName.trim()) return;
     try {
-      await axios.post(`${BACKEND_URL}/api/photos/tags`, {
+      await apiClient.post("/photos/tags", {
         name: newTagName.trim(),
         friendlyName: newTagFriendly.trim(),
         isPublic: newTagPublic,
@@ -300,8 +297,8 @@ export default function ManageWebComponent() {
     try {
       await Promise.all(
         allCategories.map((cat) =>
-          axios.put(
-            `${BACKEND_URL}/api/photos/categories/${cat.id}`,
+          apiClient.put(
+            `/photos/categories/${cat.id}`,
             {
               name: cat.name,
               friendlyName: cat.friendlyName,
@@ -313,8 +310,8 @@ export default function ManageWebComponent() {
       );
       await Promise.all(
         allTags.map((tag) =>
-          axios.put(
-            `${BACKEND_URL}/api/photos/tags/${tag.id}`,
+          apiClient.put(
+            `/photos/tags/${tag.id}`,
             {
               name: tag.name,
               friendlyName: tag.friendlyName,
@@ -337,7 +334,7 @@ export default function ManageWebComponent() {
   const softDeleteCategory = async (id: string) => {
     if (!confirm("Soft delete this category?")) return;
     try {
-      await axios.delete(`${BACKEND_URL}/api/photos/categories/${id}`, {
+      await apiClient.delete(`/photos/categories/${id}`, {
         withCredentials: true,
       });
       loadAllCategoriesAndTags();
@@ -353,10 +350,9 @@ export default function ManageWebComponent() {
     )
       return;
     try {
-      await axios.delete(
-        `${BACKEND_URL}/api/photos/categories/hard/${cat.id}`,
-        { withCredentials: true },
-      );
+      await apiClient.delete(`/photos/categories/hard/${cat.id}`, {
+        withCredentials: true,
+      });
       loadAllCategoriesAndTags();
       loadCategories();
       if (cat.name === selectedCategory) setSelectedCategory("");
@@ -368,7 +364,7 @@ export default function ManageWebComponent() {
   const softDeleteTag = async (id: string) => {
     if (!confirm("Soft delete this tag?")) return;
     try {
-      await axios.delete(`${BACKEND_URL}/api/photos/tags/${id}`, {
+      await apiClient.delete(`/photos/tags/${id}`, {
         withCredentials: true,
       });
       loadAllCategoriesAndTags();
@@ -381,7 +377,7 @@ export default function ManageWebComponent() {
     if (!confirm("Permanently delete this tag and all its photo mappings?"))
       return;
     try {
-      await axios.delete(`${BACKEND_URL}/api/photos/tags/hard/${id}`, {
+      await apiClient.delete(`/photos/tags/hard/${id}`, {
         withCredentials: true,
       });
       loadAllCategoriesAndTags();
@@ -698,7 +694,7 @@ export default function ManageWebComponent() {
         {/* Photos Grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {photos.map((photo) => {
-            const imageUrl = `${BACKEND_URL}${
+            const imageUrl = `${process.env.NEXT_PUBLIC_API_URL}${
               photo.mediumUrl.startsWith("/") ? "" : "/"
             }${photo.mediumUrl}`;
 
