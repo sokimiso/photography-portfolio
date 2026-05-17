@@ -76,14 +76,19 @@ export default function ReservationSection() {
 
   /** Fetch available packages */
   useEffect(() => {
-    const fetchPackages = async () => {
+    const fetchPackages = async (retry = 1) => {
       try {
         const res = await apiClient.get<{ packages: PhotoshootPackage[] }>(
           "/packages",
-          { withCredentials: true },
         );
+
         setPackages(res.data.packages || []);
       } catch (err: any) {
+        if (retry > 0) {
+          setTimeout(() => fetchPackages(retry - 1), 1000);
+          return;
+        }
+
         toast({
           title: "Failed to load packages",
           description: err?.response?.data?.message || "Try again later.",
@@ -91,6 +96,7 @@ export default function ReservationSection() {
         });
       }
     };
+
     fetchPackages();
   }, []);
 
