@@ -20,6 +20,7 @@ export class AuthService {
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
+
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid credentials');
     }
@@ -31,11 +32,16 @@ export class AuthService {
   async login(loginDto: LoginDto) {
     const user = await this.validateUser(loginDto.email, loginDto.password);
 
-    // Update last login timestamp
     await this.usersService.updateLastLogin(user.id);
 
-    const payload = { sub: user.id, role: user.role };
-    const token = this.jwtService.sign(payload, { expiresIn: '1d' });
+    const payload = {
+      sub: user.id,
+      role: user.role,
+    };
+
+    const token = this.jwtService.sign(payload, {
+      expiresIn: '1d',
+    });
 
     return {
       token,
@@ -47,12 +53,35 @@ export class AuthService {
     };
   }
 
-  /** Verify token */
+  /** Verify JWT token */
   async verifyToken(token: string) {
     try {
       return this.jwtService.verify(token);
-    } catch (err) {
+    } catch {
       return null;
     }
+  }
+
+  /** Resolve user from JWT token */
+  async getUserFromToken(token: string) {
+    const payload = await this.verifyToken(token);
+
+    if (!payload?.sub) {
+      return null;
+    }
+
+    const user = await this.usersService.findById(payload.sub);
+
+    if (!user || user.deletedAt) {
+      return null;
+    }
+
+    return {
+      id: user.id,
+      role: user.role,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+    };
   }
 }

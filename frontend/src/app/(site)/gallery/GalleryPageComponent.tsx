@@ -5,8 +5,7 @@ import { motion, AnimatePresence, PanInfo } from "framer-motion";
 import Image from "next/image";
 import axios from "axios";
 
-const BACKEND_URL =
-  process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:4000";
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
 interface Photo {
   id: string;
@@ -61,13 +60,13 @@ export default function GalleryPageComponent() {
     const loadPhotosAndTags = async () => {
       try {
         const photosRes = await axios.get(
-          `${BACKEND_URL}/api/photos/category/${selectedCategory}?limit=1`
+          `${BACKEND_URL}/api/photos/category/${selectedCategory}?limit=1`,
         );
         setPhotos(photosRes.data.photos);
         setNextCursor(photosRes.data.nextCursor || null);
 
         const tagsRes = await axios.get(
-          `${BACKEND_URL}/api/photos/publicCategory/${selectedCategory}/tags`
+          `${BACKEND_URL}/api/photos/publicCategory/${selectedCategory}/tags`,
         );
         setTags(tagsRes.data);
         setSelectedTag("");
@@ -89,7 +88,7 @@ export default function GalleryPageComponent() {
           setIsLoadingMore(true);
           try {
             const res = await axios.get(
-              `${BACKEND_URL}/api/photos/category/${selectedCategory}?cursor=${nextCursor}&limit=8`
+              `${BACKEND_URL}/api/photos/category/${selectedCategory}?cursor=${nextCursor}&limit=8`,
             );
             setPhotos((prev) => [...prev, ...res.data.photos]);
             setNextCursor(res.data.nextCursor || null);
@@ -100,7 +99,7 @@ export default function GalleryPageComponent() {
           }
         }
       },
-      { threshold: 0.5 }
+      { threshold: 0.5 },
     );
 
     observer.observe(loaderRef.current);
@@ -145,7 +144,7 @@ export default function GalleryPageComponent() {
     if (!filteredPhotos.length) return;
     setSwipeDirection(1);
     setActiveIndex((prev) =>
-      prev === null ? 0 : (prev + 1) % filteredPhotos.length
+      prev === null ? 0 : (prev + 1) % filteredPhotos.length,
     );
   };
 
@@ -155,7 +154,7 @@ export default function GalleryPageComponent() {
     setActiveIndex((prev) =>
       prev === null
         ? filteredPhotos.length - 1
-        : (prev - 1 + filteredPhotos.length) % filteredPhotos.length
+        : (prev - 1 + filteredPhotos.length) % filteredPhotos.length,
     );
   };
 
@@ -164,7 +163,7 @@ export default function GalleryPageComponent() {
       if (info.velocity.x < -500) goNext();
       else if (info.velocity.x > 500) goPrev();
     },
-    [filteredPhotos]
+    [filteredPhotos],
   );
 
   const swipeVariants = {
@@ -255,7 +254,7 @@ export default function GalleryPageComponent() {
                   handleImageLoad(
                     photo.id,
                     e.currentTarget.naturalWidth,
-                    e.currentTarget.naturalHeight
+                    e.currentTarget.naturalHeight,
                   )
                 }
                 sizes="

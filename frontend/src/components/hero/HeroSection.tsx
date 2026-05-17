@@ -8,7 +8,7 @@ import apiClient from "@/lib/apiClient";
 export default function HeroSection() {
   const texts = useTexts();
   const BACKEND_URL =
-    process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:4000";
+    process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
   const [images, setImages] = useState<string[]>([]);
   const [phaseIndex, setPhaseIndex] = useState(0);
@@ -19,10 +19,10 @@ export default function HeroSection() {
   useEffect(() => {
     const fetchHeroPhotos = async () => {
       try {
-        const res = await apiClient.get("/api/photos/category/hero");
+        const res = await apiClient.get("/photos/category/hero");
         const photos = res.data.photos || res.data;
         const visiblePhotos = photos.filter(
-          (p: any) => p.isVisible && !p.deletedAt
+          (p: any) => p.isVisible && !p.deletedAt,
         );
         setImages(visiblePhotos.map((p: any) => p.url));
       } catch (err) {

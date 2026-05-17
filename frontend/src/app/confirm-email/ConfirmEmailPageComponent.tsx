@@ -9,7 +9,9 @@ export default function ConfirmEmailClient() {
   const router = useRouter();
   const token = searchParams.get("token");
 
-  const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
+  const [status, setStatus] = useState<"loading" | "success" | "error">(
+    "loading",
+  );
   const [message, setMessage] = useState("Overujeme vašu e-mailovú adresu...");
 
   useEffect(() => {
@@ -21,14 +23,15 @@ export default function ConfirmEmailClient() {
 
     const confirmEmail = async () => {
       try {
-        await apiClient.get(`/api/users/confirm-email?token=${token}`);
+        await apiClient.get(`/users/confirm-email?token=${token}`);
         setStatus("success");
         setMessage("E-mail bol úspešne potvrdený! Môžete sa prihlásiť.");
         setTimeout(() => router.push("/login"), 3000);
       } catch (err: any) {
         setStatus("error");
         setMessage(
-          err?.response?.data?.message || "Overenie zlyhalo. Odkaz môže byť neplatný alebo vypršal."
+          err?.response?.data?.message ||
+            "Overenie zlyhalo. Odkaz môže byť neplatný alebo vypršal.",
         );
       }
     };
@@ -43,16 +46,16 @@ export default function ConfirmEmailClient() {
           status === "success"
             ? "border-green-400 bg-green-50 text-green-800"
             : status === "error"
-            ? "border-red-400 bg-red-50 text-red-800"
-            : "border-gray-300 bg-gray-50 text-gray-700"
+              ? "border-red-400 bg-red-50 text-red-800"
+              : "border-gray-300 bg-gray-50 text-gray-700"
         }`}
       >
         <h1 className="text-2xl font-semibold mb-2">
           {status === "loading"
             ? "Overujeme e-mail..."
             : status === "success"
-            ? "E-mail potvrdený!"
-            : "Overenie zlyhalo"}
+              ? "E-mail potvrdený!"
+              : "Overenie zlyhalo"}
         </h1>
         <p className="text-sm">{message}</p>
 

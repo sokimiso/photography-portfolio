@@ -19,8 +19,7 @@ import {
 import { PhotoshootPackage } from "@/types/order.dto";
 import { CheckCircle2, XCircle } from "lucide-react";
 
-const BACKEND_URL =
-  process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:4000";
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
 interface Photo {
   id: string;
@@ -92,8 +91,8 @@ export default function ReservationPageComponent() {
     const fetchPackages = async () => {
       try {
         const res = await apiClient.get<{ packages: PhotoshootPackage[] }>(
-          "/api/packages",
-          { withCredentials: true }
+          "/packages",
+          { withCredentials: true },
         );
         setPackages(res.data.packages || []);
       } catch (err: any) {
@@ -134,7 +133,7 @@ export default function ReservationPageComponent() {
     setLoading(true);
     try {
       await apiClient.post(
-        "/api/reservations",
+        "/reservations",
         {
           firstName,
           lastName,
@@ -144,7 +143,7 @@ export default function ReservationPageComponent() {
           shootDate: selectedDate ? selectedDate.toISOString() : undefined,
           customerMessage: message,
         },
-        { withCredentials: true }
+        { withCredentials: true },
       );
 
       toast({
@@ -332,8 +331,8 @@ export default function ReservationPageComponent() {
             {process.env.NEXT_PUBLIC_ENVIRONMENT === "production"
               ? "Dočasne nedostupné"
               : loading
-              ? "Posielam..."
-              : "Odoslať požiadavku"}
+                ? "Posielam..."
+                : "Odoslať požiadavku"}
           </Button>
         </form>
 

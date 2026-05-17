@@ -23,15 +23,18 @@ export default function ManageWebComponent() {
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [uploading, setUploading] = useState(false);
   const [photoTagInputs, setPhotoTagInputs] = useState<Record<string, string>>(
-    {}
+    {},
   );
   const [photoTitleInputs, setPhotoTitleInputs] = useState<
     Record<string, string>
   >(() =>
-    photos.reduce((acc, photo) => {
-      acc[photo.id] = photo.title || "";
-      return acc;
-    }, {} as Record<string, string>)
+    photos.reduce(
+      (acc, photo) => {
+        acc[photo.id] = photo.title || "";
+        return acc;
+      },
+      {} as Record<string, string>,
+    ),
   );
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
@@ -52,7 +55,7 @@ export default function ManageWebComponent() {
   const [newTagPublic, setNewTagPublic] = useState(false);
 
   const BACKEND_URL =
-    process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:4000";
+    process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
   const path = ["Dashboard", "Manage Web", "Hero Photos"];
 
@@ -87,7 +90,7 @@ export default function ManageWebComponent() {
   const loadPhotos = async (
     categoryName?: string,
     pageNum = 1,
-    append = false
+    append = false,
   ) => {
     try {
       const category = categoryName || selectedCategory;
@@ -186,8 +189,8 @@ export default function ManageWebComponent() {
     await togglePhotoVisibility(id, !current);
     setPhotos((prev) =>
       prev.map((photo) =>
-        photo.id === id ? { ...photo, isVisible: !current } : photo
-      )
+        photo.id === id ? { ...photo, isVisible: !current } : photo,
+      ),
     );
   };
 
@@ -195,8 +198,8 @@ export default function ManageWebComponent() {
     await togglePhotoFeatured(id, !current);
     setPhotos((prev) =>
       prev.map((photo) =>
-        photo.id === id ? { ...photo, isFeatured: !current } : photo
-      )
+        photo.id === id ? { ...photo, isFeatured: !current } : photo,
+      ),
     );
   };
 
@@ -225,8 +228,8 @@ export default function ManageWebComponent() {
         prev.map((photo) =>
           photo.id === photoId
             ? { ...photo, tags: tagsArray.map((name) => ({ name })) }
-            : photo
-        )
+            : photo,
+        ),
       );
 
       // Refresh categories/tags
@@ -244,8 +247,8 @@ export default function ManageWebComponent() {
       // Update only the affected photo in place
       setPhotos((prev) =>
         prev.map((photo) =>
-          photo.id === photoId ? { ...photo, title: newTitle } : photo
-        )
+          photo.id === photoId ? { ...photo, title: newTitle } : photo,
+        ),
       );
     } catch (err) {
       console.error(err);
@@ -304,9 +307,9 @@ export default function ManageWebComponent() {
               friendlyName: cat.friendlyName,
               isPublic: cat.isPublic,
             },
-            { withCredentials: true }
-          )
-        )
+            { withCredentials: true },
+          ),
+        ),
       );
       await Promise.all(
         allTags.map((tag) =>
@@ -317,9 +320,9 @@ export default function ManageWebComponent() {
               friendlyName: tag.friendlyName,
               isPublic: tag.isPublic,
             },
-            { withCredentials: true }
-          )
-        )
+            { withCredentials: true },
+          ),
+        ),
       );
       alert("Categories and tags updated successfully!");
       loadAllCategoriesAndTags();
@@ -352,7 +355,7 @@ export default function ManageWebComponent() {
     try {
       await axios.delete(
         `${BACKEND_URL}/api/photos/categories/hard/${cat.id}`,
-        { withCredentials: true }
+        { withCredentials: true },
       );
       loadAllCategoriesAndTags();
       loadCategories();

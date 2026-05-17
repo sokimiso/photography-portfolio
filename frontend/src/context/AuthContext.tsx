@@ -1,6 +1,12 @@
 "use client";
 
-import { createContext, ReactNode, useContext, useState, useEffect } from "react";
+import {
+  createContext,
+  ReactNode,
+  useContext,
+  useState,
+  useEffect,
+} from "react";
 import { useRouter } from "next/navigation";
 import apiClient from "@/lib/apiClient";
 
@@ -37,7 +43,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const checkSession = async () => {
       try {
-        const res = await apiClient.get("/api/auth/me", { withCredentials: true });
+        const res = await apiClient.get("/auth/me", { withCredentials: true });
         const currentUser = res.data.user;
         setLoggedIn(true);
         setRole(currentUser.role);
@@ -57,10 +63,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = async (email: string, password: string) => {
     try {
       // Backend sets HTTP-only cookie
-      await apiClient.post("/api/auth/login", { email, password }, { withCredentials: true });
+      await apiClient.post(
+        "/auth/login",
+        { email, password },
+        { withCredentials: true },
+      );
 
       // Fetch current user info
-      const res = await apiClient.get("/api/auth/me", { withCredentials: true });
+      const res = await apiClient.get("/auth/me", { withCredentials: true });
       const loggedUser = res.data.user;
 
       setLoggedIn(true);
@@ -83,7 +93,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = async () => {
     try {
-      await apiClient.post("/api/auth/logout", {}, { withCredentials: true });
+      await apiClient.post("/auth/logout", {}, { withCredentials: true });
     } catch (err) {
       console.error("Logout failed", err);
     } finally {
@@ -95,7 +105,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ loggedIn, role, token, loading, user, login, logout }}>
+    <AuthContext.Provider
+      value={{ loggedIn, role, token, loading, user, login, logout }}
+    >
       {children}
     </AuthContext.Provider>
   );

@@ -79,8 +79,8 @@ export default function ReservationSection() {
     const fetchPackages = async () => {
       try {
         const res = await apiClient.get<{ packages: PhotoshootPackage[] }>(
-          "/api/packages",
-          { withCredentials: true }
+          "/packages",
+          { withCredentials: true },
         );
         setPackages(res.data.packages || []);
       } catch (err: any) {
@@ -121,7 +121,7 @@ export default function ReservationSection() {
     setLoading(true);
     try {
       await apiClient.post(
-        "/api/reservations",
+        "/reservations",
         {
           firstName,
           lastName,
@@ -131,7 +131,7 @@ export default function ReservationSection() {
           shootDate: selectedDate ? selectedDate.toISOString() : undefined,
           customerMessage: message,
         },
-        { withCredentials: true }
+        { withCredentials: true },
       );
 
       toast({
@@ -402,8 +402,8 @@ export default function ReservationSection() {
             {process.env.NEXT_PUBLIC_ENVIRONMENT === "production"
               ? "Dočasne nedostupné"
               : loading
-              ? "Posielam..."
-              : "Odoslať požiadavku"}
+                ? "Posielam..."
+                : "Odoslať požiadavku"}
           </Button>
         </form>
       </motion.div>

@@ -20,7 +20,7 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { AuthRequest } from '../common/types/auth-request.type';
 import { title } from 'process';
 
-@Controller('api/photos')
+@Controller('photos')
 export class PhotosController {
   constructor(private readonly photosService: PhotosService) {}
 

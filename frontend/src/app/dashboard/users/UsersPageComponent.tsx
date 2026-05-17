@@ -46,7 +46,7 @@ export default function UsersPageComponent() {
   const fetchUsersByStatus = async () => {
     try {
       const promises = STATUS_TYPES.map((status) =>
-        apiClient.get<UserResult[]>(`/api/users/status/${status}`, { withCredentials: true })
+        apiClient.get<UserResult[]>(`/users/status/${status}`, { withCredentials: true })
       );
       const responses = await Promise.all(promises);
       const data = Object.fromEntries(
@@ -99,10 +99,10 @@ export default function UsersPageComponent() {
   const handleSaveUser = async (payload: Partial<UserResult>) => {
     try {
       if (selectedUser) {
-        await apiClient.put(`/api/users/${selectedUser.id}`, payload, { withCredentials: true });
+        await apiClient.put(`/users/${selectedUser.id}`, payload, { withCredentials: true });
         toast({ title: "User updated" });
       } else {
-        await apiClient.post("/api/users", payload, { withCredentials: true });
+        await apiClient.post("/users", payload, { withCredentials: true });
         toast({ title: "User created" });
       }
       setIsModalOpen(false);
@@ -118,7 +118,7 @@ export default function UsersPageComponent() {
 
   const handleDeleteUser = async (userId: string) => {
     try {
-      await apiClient.delete(`/api/users/${userId}`, { withCredentials: true });
+      await apiClient.delete(`/users/${userId}`, { withCredentials: true });
       toast({ title: "User deleted" });
       await fetchUsersByStatus();
     } catch (err: any) {
@@ -138,7 +138,7 @@ export default function UsersPageComponent() {
     deliveryAddress: string;
   }) => {
     try {
-      await apiClient.post("/api/users", payload, { withCredentials: true });
+      await apiClient.post("/users", payload, { withCredentials: true });
       toast({ title: "User created" });
       setIsCreateModalOpen(false);
       await fetchUsersByStatus();

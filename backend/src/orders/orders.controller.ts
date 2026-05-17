@@ -17,9 +17,9 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { PackageResponseDto } from '../packages/dto/package-response.dto';
-import { AuthRequest } from '../common/types/auth-request.type'; 
+import { AuthRequest } from '../common/types/auth-request.type';
 
-@Controller('api/orders')
+@Controller('orders')
 export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 
@@ -34,7 +34,7 @@ export class OrdersController {
   async getConfirmedOrders(@Req() req: Request) {
     return this.ordersService.findOrdersByStatus('CONFIRMED');
   }
-  
+
   @Get('cancelled')
   @UseGuards(JwtAuthGuard)
   async getCancelledOrders(@Req() req: Request) {
@@ -45,14 +45,14 @@ export class OrdersController {
   @UseGuards(JwtAuthGuard)
   async getCompletedOrders(@Req() req: Request) {
     return this.ordersService.findOrdersByStatus('COMPLETED');
-  }  
+  }
 
   @UseGuards(JwtAuthGuard)
   @Get('pending-payments')
   async getPendingPayments() {
     return this.ordersService.findPendingPayments();
   }
-    
+
   @Post('create')
   @UseGuards(JwtAuthGuard)
   async createOrder(
@@ -80,10 +80,7 @@ export class OrdersController {
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
-  async deleteOrder(
-    @Param('id') id: string,
-    @Req() req: AuthRequest,
-  ) {
+  async deleteOrder(@Param('id') id: string, @Req() req: AuthRequest) {
     if (!req.user) {
       throw new BadRequestException('User not found in request');
     }
@@ -95,7 +92,9 @@ export class OrdersController {
     if (status !== 'PENDING' && status !== 'CONFIRMED') {
       throw new BadRequestException('Invalid status');
     }
-    return this.ordersService.findOrdersByStatus(status as 'PENDING' | 'CONFIRMED');
+    return this.ordersService.findOrdersByStatus(
+      status as 'PENDING' | 'CONFIRMED',
+    );
   }
 
   @Get('user/:userId')
@@ -104,12 +103,12 @@ export class OrdersController {
     @Query('status') status?: string,
   ) {
     return this.ordersService.findOrdersByUser(userId, status);
-  }  
+  }
 
   @Get('packages')
   async getPackages(): Promise<PackageResponseDto[]> {
     const packages = await this.ordersService.findAllPackages();
-    return packages.map(pkg => ({
+    return packages.map((pkg) => ({
       id: pkg.id,
       displayName: pkg.displayName,
       description: pkg.description ?? undefined,

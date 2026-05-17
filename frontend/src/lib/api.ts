@@ -1,34 +1,27 @@
 import apiClient from "./apiClient";
-import axios from "axios";
-
-const BACKEND_URL =
-  process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:4000";
 
 /** Fetch photos by category with optional pagination */
 export const getPhotosByCategory = async (
   category: string,
   page = 1,
   limit = 30,
-  showAll = false
+  showAll = false,
 ) => {
-  const res = await apiClient.get(`/api/photos/category/${category}`, {
+  const res = await apiClient.get(`/photos/category/${category}`, {
     params: { page, limit, showAll },
-    withCredentials: true,
   });
+
   return res.data;
 };
 
 export const updatePhotoTags = async (id: string, tags: string[]) => {
-  const res = await axios.put(
-    `${BACKEND_URL}/api/photos/${id}/tags`,
-    { tags },
-    { withCredentials: true }
-  );
+  const res = await apiClient.put(`/photos/${id}/tags`, { tags });
+
   return res.data;
 };
 
 export const uploadPhoto = async (formData: FormData) => {
-  const res = await apiClient.post(`/api/photos/upload`, formData, {
+  const res = await apiClient.post(`/photos/upload`, formData, {
     withCredentials: true,
     headers: {
       "Content-Type": "multipart/form-data",
@@ -39,38 +32,38 @@ export const uploadPhoto = async (formData: FormData) => {
 
 export const togglePhotoFeatured = async (id: string, isVisible: boolean) => {
   const res = await apiClient.put(
-    `/api/photos/${id}/featured`,
+    `/photos/${id}/featured`,
     { isVisible },
-    { withCredentials: true }
+    { withCredentials: true },
   );
   return res.data;
 };
 
 export const togglePhotoVisibility = async (id: string, isVisible: boolean) => {
   const res = await apiClient.put(
-    `/api/photos/${id}/visibility`,
+    `/photos/${id}/visibility`,
     { isVisible },
-    { withCredentials: true }
+    { withCredentials: true },
   );
   return res.data;
 };
 
 export const deletePhoto = async (id: string) => {
-  const res = await apiClient.delete(`/api/photos/${id}`, {
+  const res = await apiClient.delete(`/photos/${id}`, {
     withCredentials: true,
   });
   return res.data;
 };
 
 export const hardDeletePhoto = async (id: string) => {
-  const res = await apiClient.delete(`/api/photos/hard/${id}`, {
+  const res = await apiClient.delete(`/photos/hard/${id}`, {
     withCredentials: true,
   });
   return res.data;
 };
 
 export const updatePhotoTitle = async (id: string, title: string) => {
-  const res = await apiClient.put(`/api/photos/${id}/title`, { title });
+  const res = await apiClient.put(`/photos/${id}/title`, { title });
   return res.data;
 };
 
@@ -80,7 +73,7 @@ export async function fetchMenuTexts() {
 }
 
 export const checkUserExists = async (email: string) => {
-  const res = await apiClient.get(`/api/users/exists`, {
+  const res = await apiClient.get(`/users/exists`, {
     params: { email },
     withCredentials: true,
   });
@@ -102,7 +95,7 @@ export interface PhotoshootPackage {
 
 /** Fetch all packages from backend */
 export const getAllPackages = async (): Promise<PhotoshootPackage[]> => {
-  const res = await apiClient.get("/api/packages", { withCredentials: true });
+  const res = await apiClient.get("/packages", { withCredentials: true });
 
   // Extract packages array
   const packages = res.data?.packages;
@@ -129,7 +122,8 @@ export const getActiveKidsPortraitPackages = async (): Promise<
   const packages = await getAllPackages();
   return packages.filter(
     (p) =>
-      p.internalName.includes("KIDS_AT") || p.internalName.includes("KIDS_HOME")
+      p.internalName.includes("KIDS_AT") ||
+      p.internalName.includes("KIDS_HOME"),
   );
 };
 
@@ -144,7 +138,7 @@ export const getActiveSchoolPackages = async (): Promise<
 /** Fetch random featured photos (isFeatured=true) from a category */
 export const getFeaturedPhotosByCategory = async (
   category: string,
-  limit = 4
+  limit = 4,
 ) => {
   try {
     const res = await getPhotosByCategory(category, 1, 200, true);

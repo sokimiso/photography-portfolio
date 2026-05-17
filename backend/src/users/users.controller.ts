@@ -15,7 +15,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Public } from '../auth/decorators/public.decorator';
 
-@Controller('api/users')
+@Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
@@ -26,11 +26,15 @@ export class UsersController {
 
     try {
       await this.usersService.confirmEmail(token);
-      console.log("called this.usersService.confirmEmail(token) with token = ",token)
+      console.log(
+        'called this.usersService.confirmEmail(token) with token = ',
+        token,
+      );
       return { message: 'E-mail successfully confirmed!' };
     } catch (err: any) {
       throw new BadRequestException(
-        err?.message || 'Email confirmation failed. Token may be invalid or expired.'
+        err?.message ||
+          'Email confirmation failed. Token may be invalid or expired.',
       );
     }
   }
@@ -44,7 +48,7 @@ export class UsersController {
 
     const result = await this.usersService.checkIfUserExists(email);
     return result; // { exists: true/false }
-  }  
+  }
 
   /** ------------------------------
    * CREATE USER
@@ -61,7 +65,10 @@ export class UsersController {
    * ----------------------------- */
   @UseGuards(JwtAuthGuard)
   @Put(':id')
-  async updateUser(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
+  async updateUser(
+    @Param('id') id: string,
+    @Body() updateUserDto: UpdateUserDto,
+  ) {
     const user = await this.usersService.updateUser(id, updateUserDto);
     return { user };
   }
@@ -94,15 +101,16 @@ export class UsersController {
   async getUserById(@Param('id') id: string) {
     const user = await this.usersService.findById(id);
     return { user };
-  }  
+  }
 
   /** ------------------------------
    * GET USERS BY STATUS
    * ----------------------------- */
   @UseGuards(JwtAuthGuard)
   @Get('status/:status')
-  async getUsersByStatus(@Param('status') status: 'pending' | 'confirmed' | 'inactive' | 'deleted') {
+  async getUsersByStatus(
+    @Param('status') status: 'pending' | 'confirmed' | 'inactive' | 'deleted',
+  ) {
     return this.usersService.findUsersByStatus(status);
   }
-
 }

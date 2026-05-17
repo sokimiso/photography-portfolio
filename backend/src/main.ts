@@ -11,6 +11,9 @@ async function bootstrap() {
   // Trust CLOUDFLARE/PROXIES
   app.set('trust proxy', 1);
 
+  //Global API prefix
+  app.setGlobalPrefix('api');
+
   // Use environment variable for frontend origin
   const allowedOrigins = [
     process.env.FRONTEND_URL || 'http://localhost:3000',

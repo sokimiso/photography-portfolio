@@ -12,7 +12,7 @@ import { LoginDto } from '../users/dto/login.dto';
 import { Response, Request } from 'express';
 import { Public } from '../auth/decorators/public.decorator';
 
-@Controller('api/auth')
+@Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
@@ -28,18 +28,23 @@ export class AuthController {
 
     const isProd = process.env.NODE_ENV === 'production';
 
-    // Set HTTP-only cookie
     res.cookie('token', token, {
       httpOnly: true,
-      secure: isProd, // only send over HTTPS in prod
-      sameSite: isProd ? 'none' : 'lax', // allow localhost testing
-      maxAge: 24 * 60 * 60 * 1000, // 1 day
+      secure: isProd,
+      sameSite: isProd ? 'none' : 'lax',
+      maxAge: 24 * 60 * 60 * 1000,
       path: '/',
     });
 
     return {
       message: 'Login successful',
-      user: { id, role, email, firstName, lastName },
+      user: {
+        id,
+        role,
+        email,
+        firstName,
+        lastName,
+      },
     };
   }
 
@@ -58,30 +63,23 @@ export class AuthController {
     return { message: 'Logged out' };
   }
 
-  /** GET CURRENT USER */
+  /** CURRENT AUTHENTICATED USER */
   @Get('me')
   async me(@Req() req: Request) {
     const token = req.cookies?.token;
 
-    if (!token) throw new UnauthorizedException('Not authenticated');
+    if (!token) {
+      throw new UnauthorizedException('Not authenticated');
+    }
 
-    const payload = await this.authService.verifyToken(token);
-    if (!payload) throw new UnauthorizedException('Invalid token');
+    const user = await this.authService.getUserFromToken(token);
 
-    // Fetch user info from UsersService
-    const user = await this.authService['usersService'].findById(payload.sub);
-
-    if (!user || user.deletedAt)
-      throw new UnauthorizedException('User not found');
+    if (!user) {
+      throw new UnauthorizedException('Invalid token');
+    }
 
     return {
-      user: {
-        id: user.id,
-        role: user.role,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        email: user.email,
-      },
+      user,
     };
   }
 }

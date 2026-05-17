@@ -49,7 +49,7 @@ export const FeaturedThumbs = ({
           <div style={{ position: "relative", width: "100%", height: "200px" }}>
             <Image
               src={`${
-                process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:4000"
+                process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"
               }${photo.thumbnailUrl}`}
               alt={photo.title || "Featured photo"}
               fill
